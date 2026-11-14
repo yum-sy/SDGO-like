@@ -37,10 +37,10 @@ manifest['icons']=[{'src':'index.192x192.png','sizes':'192x192','type':'image/pn
 manifest.update(name='Capsule Sortie',short_name='Capsule',id='./',scope='./',start_url='./index.html',description='RX78 vs Zaku · 3D action fan demo',theme_color='#172537')
 (dist/'index.manifest.json').write_text(json.dumps(manifest))
 assets=sorted(p.name for p in dist.iterdir() if p.is_file() and p.name not in ('index.service.worker.js','.DS_Store','.gdignore','.nojekyll'))
-hash_value=hashlib.sha256(b''.join((dist/n).read_bytes() for n in assets)).hexdigest()[:16]
+hash_value=hashlib.sha256(b'precache-reload-v2'+b''.join((dist/n).read_bytes() for n in assets)).hexdigest()[:16]
 worker='''const CACHE="capsule-__VERSION__";
 const FILES=__FILES__;
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES.map(file=>new Request(file,{cache:'reload'}))))));
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('capsule-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));
 self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting();});
 self.addEventListener('fetch',e=>{
