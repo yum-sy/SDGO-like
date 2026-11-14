@@ -1,6 +1,6 @@
 config_version=5
 [application]
-config/name="Capsule Sortie · Tactical Update"
+config/name="Capsule Sortie · Mission Update"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="CapsuleSortie"
 run/main_scene="res://main.tscn"

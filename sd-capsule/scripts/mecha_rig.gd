@@ -6,6 +6,9 @@ var saber: MeshInstance3D
 var down := false
 var saber_equipped := false
 var joint_sides := {}
+var aim_left := 0.0
+var aim_pitch := 0.0
+var gun_side := "R"
 var recoil := 0.0
 var hurt := 0.0
 var landing := 0.0
@@ -45,6 +48,7 @@ func _ready() -> void:
 			joints[name_text] = joint
 			if "armor_gun" in name_text:
 				weapon = part
+				gun_side = limb_side
 	saber = MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = 0.045
@@ -83,7 +87,9 @@ func _ready() -> void:
 		flame.rotation.x = PI*0.5
 		add_child(flame)
 		thrusters.append(flame)
-func fire() -> void: recoil = 1.0
+func fire() -> void:
+	recoil = 1.0
+	aim_left = 0.65
 func hit() -> void: hurt = 1.0
 func land() -> void: landing = 1.0
 func set_attack_pose(clock: RefCounted) -> void:
@@ -104,6 +110,7 @@ func apply_blade_pose() -> void:
 		saber.position = Vector3(-0.65,1.4,0.6)
 		saber.rotation = Vector3(0.2,0,-0.2)
 func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> void:
+	aim_left = maxf(0,aim_left-delta)
 	recoil = move_toward(recoil,0,delta*9)
 	hurt = move_toward(hurt,0,delta*5)
 	landing = move_toward(landing,0,delta*6)
@@ -122,11 +129,15 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			joint.rotation.x = angle if grounded else -0.25
 		else:
 			joint.rotation.x = -angle * 0.4 - recoil*0.25 - sin(reload_progress*PI)*0.65
+			joint.rotation.y = 0
+			if joint_sides[key] == gun_side and reload_progress == 0 and swing_left == 0:
+				joint.rotation.x -= (0.95+aim_pitch)*minf(1,aim_left*8)
 	apply_blade_pose()
 	if swing_left > 0:
 		for key in joints:
-			if "hand_" in key or "armor_shield" in key:
-				joints[key].rotation.x = -0.6 + sin(attack_angle)*0.5
+			if ("hand_" in key or "armor_" in key) and joint_sides[key] == gun_side:
+				joints[key].rotation.x = -0.8
+				joints[key].rotation.y = attack_angle*0.55
 		rotation.z += sin(attack_angle)*0.12
 
 func die() -> void:

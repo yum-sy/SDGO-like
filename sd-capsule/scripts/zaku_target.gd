@@ -3,6 +3,8 @@ signal destroyed(target)
 const Brain = preload("res://scripts/ai_input.gd")
 var melee_clock := preload("res://scripts/attack_clock.gd").new()
 var melee_facing := Vector3.FORWARD
+var veteran := false
+var last_hit_kind := "other"
 var role := "ASSAULT"
 var home := Vector3.ZERO
 var aim_line: MeshInstance3D
@@ -66,9 +68,10 @@ func _ready() -> void:
 	aim_line.hide()
 func aim_point() -> Vector3:
 	return global_position + Vector3.UP * 1.05
-func damage(amount: int) -> void:
+func damage(amount: int, kind: String = "other") -> void:
 	if hp <= 0:
 		return
+	last_hit_kind = kind
 	hp = maxi(0,hp-amount)
 	flash_left = 0.14
 	stun = 0.22
@@ -89,6 +92,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	stun = maxf(0,stun-delta)
 	cooldown = maxf(0,cooldown-delta)
 	var command := brain.sample(self,player,delta)
+	if veteran: command.speed *= 1.18
 	var direction: Vector3 = command.move
 	if windup > 0 or melee_clock.running: command.speed = 0
 	if burst_left > 0 and stun == 0:
@@ -123,7 +127,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 			if offset.length() < 2.8 and offset.normalized().dot(melee_facing) > 0.45 and not contact.is_empty() and contact.collider == player:
 				melee_clock.hit_ids[player.get_instance_id()] = true
 				var before: int = player.hp
-				player.damage(12)
+				player.damage_from(12,global_position)
 				if player.hp < before:
 					player.impulse = melee_facing*7
 					battle.impact(player.aim_point(),12,Color(1,0.4,0.2))
@@ -150,7 +154,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 				windup = 0.55
 			else:
 				windup = 1.0 if role == "SUPPORT" else 0.65
-			cooldown = 1.7 if role == "ASSAULT" else 2.8
+			cooldown = (1.7 if role == "ASSAULT" else 2.8)*(0.8 if veteran else 1.0)
 	if position.y < -12:
 		damage(max_hp)
 func _process(delta: float) -> void:

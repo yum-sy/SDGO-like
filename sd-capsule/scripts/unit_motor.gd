@@ -8,6 +8,7 @@ var booster: float:
 var hp: int:
 	get: return state.hp
 var focus_yaw := NAN
+var last_hit_from := Vector3.ZERO
 var attack_slow := 1.0
 var yaw := 0.0
 var pitch := -0.22
@@ -23,6 +24,9 @@ var grounded := false
 
 func aim_point() -> Vector3:
 	return global_position + Vector3.UP * 1.1
+func damage_from(amount: int, source: Vector3) -> void:
+	if hp > 0 and state.invulnerable <= 0: last_hit_from = source
+	damage(amount)
 func damage(amount: int) -> void:
 	if state.damage(amount):
 		hit.emit()

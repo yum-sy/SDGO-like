@@ -21,7 +21,9 @@ func _physics_process(delta: float) -> void:
 	var query := PhysicsRayQueryParameters3D.create(global_position,end,3,[shooter])
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	if not result.is_empty():
-		if result.collider.has_method("damage"):
+		if result.collider.has_method("damage_from"):
+			result.collider.damage_from(8,global_position)
+		elif result.collider.has_method("damage"):
 			result.collider.damage(8)
 		queue_free()
 	elif lifetime <= 0:

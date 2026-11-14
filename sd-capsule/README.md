@@ -1,4 +1,4 @@
-# Capsule Sortie — Tactical Update
+# Capsule Sortie — Mission Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -11,12 +11,23 @@ Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web ex
 - WASD 이동, Space 점프/길게 공중 부스터, Shift 방향 대시
 - 좌클릭/F: 선택 무장 사용, 우클릭/V: 사벨
 - R 재장전, Tab 표적 전환·시점 회전, Q/E 무장 전환
-- 시작/결과 화면에서 N 또는 MAP 버튼: 전장 전환
+- 시작/결과 화면에서 N 또는 MAP 버튼: 전장 전환, H 또는 난이도 버튼: 표준/베테랑
+- C 또는 터치 AUTO: 자유 조준 전환. Tab/TARGET은 표적 보조를 다시 켭니다.
 - 화면 상단 **마우스 잠금** 버튼: 자유 시점. 지원하지 않으면 화면 드래그
 - Esc 일시정지, M 음소거, L 저사양, T 터치 UI 표시
 - 터치: 왼쪽 이동, 오른쪽 공격·부스터·대시·재장전·무장·표적 버튼, 나머지 영역 시점 드래그
 
 화면 위에 조작 UI를 겹치며 별도 조작 패널로 게임 화면을 줄이지 않습니다. 가로 화면을 사용하세요. 모바일 브라우저에서 세로 화면이면 가로 회전 안내가 표시됩니다.
+
+## 임무·엄폐물·표현 개선 (2026-11-15)
+
+- Kenney 상자가 75HP의 파괴 가능한 엄폐물이 됩니다. 라이플 3발 또는 사벨 타격으로 파괴하면 충돌이 사라지고 AI 경로를 다시 생성합니다. 같은 상자를 여러 번 점수로 계산하지 않습니다.
+- C 키/터치 AUTO로 자유 조준, Tab/TARGET으로 적 표적 보조 복귀. 자유 조준 상태에서 상자를 직접 겨눌 수 있습니다.
+- H 키/난이도 버튼: STANDARD(자쿠 180HP) / VETERAN(240HP, 이동 1.18배, 발사 간격 0.8배, 탄속 20). 경고 준비 시간을 단축하지 않아 회피할 시간은 유지합니다.
+- 승리 조건은 여전히 자쿠 3기 격파입니다. 보너스는 45초 이내, 잔여 HP 60 이상, 전장별 목표입니다. 화물장은 사벨 마무리 1회, 원형 전장은 엄폐물 2개 파괴가 목표입니다. 적 탄환으로 무너진 엄폐물도 열린 통로로 계산됩니다.
+- 결과 점수는 격파·잔여 HP·시간·메달을 반영하고 베테랑은 1.4배입니다. 최고 점수/시간을 전장×난이도 4개 조합별로 분리 저장합니다. 전투 중 선택 목표 진행도를 표시합니다.
+- 건담 사격 팔/무장 조준 자세, 공격 손의 회전, 실제 피해 방향 표시, 엄폐물 HP와 격파 알림을 추가했습니다.
+- 검증: 기존 70개 + 임무/엄폐물/점수 20개 = 90개 자동 검사, 별도 PWA 검사. 브라우저에서 엄폐 파괴·통로 개방·사벨 보너스·모바일 AUTO 배치, 표준 16.6초/2,054점과 베테랑 13.9초/2,506점 승리 확인. 실제 스마트폰 성능 검사는 아닙니다.
 
 ## 공격 동기화·전장·전술 개선 (2026-11-14)
 
@@ -89,6 +100,7 @@ export GODOT_BIN=/path/to/godot
 "$GODOT_BIN" --headless --path sd-capsule --script tests/demo_test.gd
 "$GODOT_BIN" --headless --path sd-capsule --script tests/polish_test.gd
 "$GODOT_BIN" --headless --path sd-capsule --script tests/tactical_test.gd
+"$GODOT_BIN" --headless --path sd-capsule --script tests/sortie_test.gd
 python3 sd-capsule/tools/build_web.py --godot "$GODOT_BIN"
 node sd-capsule/tests/pwa_test.mjs
 python3 -m http.server 8063 --bind 127.0.0.1 --directory sd-capsule/dist
@@ -117,7 +129,7 @@ python3 -m http.server 8063 --bind 127.0.0.1 --directory sd-capsule/dist
 2026-11-14 개발 환경 기준. 아래 FPS/오프라인 검사는 1차 데모 기준이며, 이후 모션·그림자가 추가된 빌드의 실기기 성능 보장이 아닙니다:
 
 - 생성된 서비스워커를 오래된 HTTP 캐시/오프라인 조건에서 실행하는 Node 회귀 검사 통과
-- headless 전투 13개 + 확장 14개 + 완성도 회귀 17개 + 공격/전술 26개 = 70개 통과
+- headless 전투 13개 + 확장 14개 + 완성도 회귀 17개 + 공격/전술 26개 + 임무 20개 = 90개 통과
 - 180HP 전투 설정, 자쿠 관절/반동/격파, 사벨 대기 자세, 부스터 표시, 적 근접 공격과 이탈 회피, 이펙트 최대 개수/소멸 검증
 - 라이플 명중/쿨다운/재장전, 벽 가림/관통 방지, 범위, 승리 및 중복 격파 방지
 - 사벨 3타/넉백, HP/무적, 대시/부스터 소진·회복, 동시 멀티터치 명령, AI 이동/회피, 패배

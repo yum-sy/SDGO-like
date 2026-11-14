@@ -2,6 +2,7 @@ extends RefCounted
 # Shared collision footprints and navigation; only instantiated once per sortie.
 const NAMES = ["CARGO YARD","REACTOR RING"]
 static var selected := 0
+var removed_covers: Array[int] = []
 var index := 0
 var footprints: Array[Rect2] = []
 var navigation := AStarGrid2D.new()
@@ -17,8 +18,12 @@ func spawns() -> Array[Vector3]:
 	if index == 0: return [Vector3(0,0,-13),Vector3(-13,0,-17),Vector3(19,1.5,-16)]
 	return [Vector3(-6,0,-16),Vector3(13,0,-18),Vector3(-20,1.5,-18)]
 func build_navigation() -> void:
+	navigation = AStarGrid2D.new()
 	footprints.clear()
-	for at in crates(): footprints.append(Rect2(Vector2(at.x-1.5,at.z-1.25),Vector2(3,2.5)))
+	for i in range(crates().size()):
+		if i in removed_covers: continue
+		var at: Vector3 = crates()[i]
+		footprints.append(Rect2(Vector2(at.x-1.5,at.z-1.25),Vector2(3,2.5)))
 	for item in structures(): footprints.append(Rect2(Vector2(item.at.x-item.size.x/2,item.at.z-item.size.z/2),Vector2(item.size.x,item.size.z)))
 	navigation.region = Rect2i(-14,-14,29,29)
 	navigation.cell_size = Vector2(2,2)
@@ -44,3 +49,8 @@ func closest_cell(at: Vector3) -> Vector2i:
 	return best
 func path(from: Vector3, to: Vector3) -> PackedVector2Array:
 	return navigation.get_point_path(closest_cell(from),closest_cell(to))
+
+func remove_cover(index_to_remove: int) -> void:
+	if index_to_remove in removed_covers: return
+	removed_covers.append(index_to_remove)
+	build_navigation()

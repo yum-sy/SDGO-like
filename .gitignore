@@ -15,3 +15,5 @@ __pycache__/
 !sd-capsule/evidence/.gdignore
 
 !sd-capsule/evidence/tactical-tests.txt
+
+!sd-capsule/evidence/sortie-tests.txt

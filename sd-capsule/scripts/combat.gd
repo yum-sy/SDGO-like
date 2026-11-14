@@ -13,6 +13,10 @@ var manual_target_left := 0.0
 var selected: Node3D
 var player: CharacterBody3D
 var camera: Camera3D
+var auto_aim := true
+var melee_kills := 0
+var notice := ""
+var notice_left := 0.0
 var kills := 0
 var hit_left := 0.0
 var message := ""
@@ -50,7 +54,11 @@ func eligible(target: Node3D) -> bool:
 	return not obstruction.is_empty() and obstruction.collider == target
 
 func update_target(cycle: bool) -> void:
+	if not auto_aim and not cycle:
+		selected = null
+		return
 	if cycle:
+		auto_aim = true
 		var available: Array = []
 		for target in targets:
 			if target.hp <= 0 or player.global_position.distance_to(target.global_position) > RANGE: continue
@@ -83,6 +91,7 @@ func step(command: Dictionary, delta: float) -> void:
 	if won or lost:
 		return
 	elapsed += delta
+	notice_left = maxf(0,notice_left-delta)
 	manual_target_left = maxf(0,manual_target_left-delta)
 	camera_trauma = move_toward(camera_trauma,0,delta*3)
 	for popup in damage_popups: popup.life -= delta
@@ -99,6 +108,11 @@ func step(command: Dictionary, delta: float) -> void:
 		return
 	if player.dash_left > 0 and attack.running: cancel_melee()
 	advance_melee(delta)
+	if command.get("aim",false):
+		auto_aim = not auto_aim
+		player.focus_yaw = NAN
+		selected = null
+		announce("TARGET ASSIST ON" if auto_aim else "FREE AIM / SHOOT COVER")
 	update_target(command.get("cycle",false))
 	if command.get("weapon",false):
 		weapon = 1-weapon
@@ -135,7 +149,7 @@ func enemy_shot(shooter: CharacterBody3D, point: Vector3) -> void:
 	bolt.shooter = shooter.get_rid()
 	add_child(bolt)
 	bolt.global_position = shooter.aim_point()
-	bolt.velocity = (point-bolt.global_position).normalized()*17
+	bolt.velocity = (point-bolt.global_position).normalized()*(20 if shooter.veteran else 17)
 	sound("enemy")
 func cancel_melee() -> void:
 	attack.cancel()
@@ -167,7 +181,7 @@ func advance_melee(delta: float) -> void:
 		if attack.previous < attack.CLIPS[combo-1].x:
 			sound("saber")
 			player.impulse = attack_facing*3
-		for target in targets:
+		for target in targets+get_tree().get_nodes_in_group("breakable_cover"):
 			if target.hp <= 0 or attack.hit_ids.has(target.get_instance_id()): continue
 			var offset: Vector3 = target.aim_point()-player.aim_point()
 			if not attack.intersects(offset,attack_facing): continue
@@ -175,8 +189,8 @@ func advance_melee(delta: float) -> void:
 			if not obstruction.is_empty() and obstruction.collider == target:
 				attack.hit_ids[target.get_instance_id()] = true
 				var amount: int = [25,30,45][combo-1]
-				target.damage(amount)
-				target.knockback = attack_facing*(9 if combo == 3 else 3)
+				target.damage(amount,"saber")
+				if target is CharacterBody3D: target.knockback = attack_facing*(9 if combo == 3 else 3)
 				impact(target.aim_point(),amount,Color(1,0.25,0.6))
 				camera_trauma = 0.35 if combo == 3 else 0.16
 				hit_left = 0.18
@@ -201,6 +215,7 @@ func shoot() -> void:
 			aim = sight.position
 	var muzzle: Vector3 = player.global_position + Vector3.UP * 1.35 + player.visual.global_basis.x * 0.5
 	direction = (aim - muzzle).normalized()
+	player.rig.aim_pitch = asin(clampf(direction.y,-1,1))
 	player.visual.rotation.y = atan2(-direction.x,-direction.z)
 	FX.spawn(self,muzzle,Color(0.5,1,0.8),0.35)
 	var endpoint: Vector3 = muzzle + direction * RANGE
@@ -208,7 +223,7 @@ func shoot() -> void:
 	if not result.is_empty():
 		endpoint = result.position
 		if result.collider.has_method("damage"):
-			result.collider.damage(Rifle.DAMAGE)
+			result.collider.damage(Rifle.DAMAGE,"rifle")
 			impact(endpoint,Rifle.DAMAGE,Color(0.5,1,0.8))
 			hits += 1
 			sound("hit")
@@ -240,7 +255,12 @@ func impact(point: Vector3, amount: int, tint: Color) -> void:
 	FX.spawn(self,point,tint)
 	damage_popups.append({"point":point,"amount":amount,"life":0.65,"tint":tint})
 	if damage_popups.size() > 12: damage_popups.pop_front()
+func announce(text: String) -> void:
+	notice = text
+	notice_left = 2.0
 func on_destroyed(_target: Node3D) -> void:
+	if _target.last_hit_kind == "saber": melee_kills += 1
+	announce(_target.role+" ELIMINATED")
 	FX.spawn(self,_target.aim_point(),Color(1,0.5,0.12),2.0)
 	camera_trauma = maxf(camera_trauma,0.28)
 	sound("destroy")

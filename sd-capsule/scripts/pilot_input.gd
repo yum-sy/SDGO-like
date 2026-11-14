@@ -46,6 +46,8 @@ func _input(event: InputEvent) -> void:
 			KEY_M: queued.mute = true
 			KEY_L: queued.quality = true
 			KEY_N: queued.arena = true
+			KEY_H: queued.difficulty = true
+			KEY_C: queued.aim = true
 		get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -96,7 +98,7 @@ func sample() -> Dictionary:
 	move = Vector2(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W))) if active else Vector2.ZERO
 	move = (move+touch_move).limit_length()
 	var command := {"move":move,"look":look,"jump":jump,"boost":held("boost") or (active and Input.is_physical_key_pressed(KEY_SPACE)),"dash":held("dash") or (active and Input.is_physical_key_pressed(KEY_SHIFT)),"fire":mouse_fire or left_down or held("fire") or (active and Input.is_physical_key_pressed(KEY_F)),"melee":mouse_melee or right_down or held("melee") or (active and Input.is_physical_key_pressed(KEY_V))}
-	for action in ["reload","cycle","weapon","restart","pause","mute","quality","suspend","arena"]:
+	for action in ["reload","cycle","weapon","restart","pause","mute","quality","suspend","arena","difficulty","aim"]:
 		command[action] = queued.get(action,false)
 	queued.clear()
 	look = Vector2.ZERO

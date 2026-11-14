@@ -1,0 +1,23 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS veteran applies stronger enemies to the encounter
+PASS veteran projectiles use intended speed
+PASS free aim disables automatic enemy targeting
+PASS manual target cycle restores target assist
+PASS intact cover blocks navigation cell
+PASS two rifle shots damage but do not remove cover
+PASS third rifle shot removes cover collision and visuals
+PASS destroyed cover opens navigation immediately
+PASS destroyed cover cannot award duplicate credit
+PASS physics ray no longer hits destroyed cover
+PASS saber finishing blow earns specialty progress
+PASS earlier saber hit does not count a rifle finishing blow
+PASS cargo medals include exact time and HP boundaries
+PASS standard score combines clear, health, time and medals
+PASS veteran score multiplier and record namespace are separate
+PASS reactor specialty requires two opened covers
+PASS reactor specialty awarded after two cover breaks
+PASS defeat grants no completion medals or win bonuses
+PASS invulnerable hits do not overwrite actual damage direction
+PASS saber swept hit also damages destructible cover
+FAILURES 0

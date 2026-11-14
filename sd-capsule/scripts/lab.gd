@@ -3,6 +3,9 @@ const Bolt = preload("res://scripts/enemy_bolt.gd")
 const PilotInput = preload("res://scripts/pilot_input.gd")
 const UnitMotor = preload("res://scripts/unit_motor.gd")
 const Arena = preload("res://scripts/arena_layout.gd")
+const Rules = preload("res://scripts/sortie_rules.gd")
+var rules := Rules.new()
+var best_score := 0
 var arena := Arena.new()
 var combat: Node3D
 var pilot: Node
@@ -46,25 +49,25 @@ func block(size: Vector3, at: Vector3, color: Color) -> void:
 	shape.size = size
 	collision.shape = shape
 	body.add_child(collision)
-func crate(at: Vector3) -> void:
-	var body := StaticBody3D.new()
+func crate(at: Vector3, index: int = 0) -> void:
+	var body := preload("res://scripts/destructible_cover.gd").new()
+	body.cover_index = index
 	add_child(body)
 	body.position = at
-	var prop := preload("res://assets/props/crate.glb").instantiate()
-	prop.scale = Vector3.ONE*3
-	body.add_child(prop)
-	var collision := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(3,2.7,2.5)
-	collision.shape = shape
-	collision.position.y = 1.35
-	body.add_child(collision)
+	body.broken.connect(func(cover_id):
+		arena.remove_cover(cover_id)
+		rules.cover_breaks += 1
+		combat.announce("COVER DESTROYED / ROUTE OPEN")
+		combat.sound("destroy"))
 func _ready() -> void:
 	arena.index = Arena.selected
+	rules.arena_id = arena.index
+	rules.level = Rules.selected
 	arena.build_navigation()
 	var config := ConfigFile.new()
 	if config.load("user://settings.cfg") == OK:
-		best_time = config.get_value("record","tactical_%d" % arena.index,0.0)
+		best_time = config.get_value("record",rules.record_key()+"_time",0.0)
+		best_score = config.get_value("record",rules.record_key()+"_score",0)
 		low_quality = config.get_value("settings","low_quality",false)
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
@@ -91,7 +94,7 @@ func _ready() -> void:
 	for side in [-1,1]:
 		block(Vector3(1,5,60),Vector3(side*30,2.5,0),Color("26394b"))
 		block(Vector3(60,5,1),Vector3(0,2.5,side*30),Color("26394b"))
-	for p in arena.crates(): crate(p)
+	for i in range(arena.crates().size()): crate(arena.crates()[i],i)
 	for structure in arena.structures():
 		block(structure.size,structure.at,Color("394e61"))
 		box(self,Vector3(structure.size.x,0.04,structure.size.z),structure.at+Vector3.UP*(structure.size.y/2+0.03),Color("55798b"))
@@ -106,6 +109,10 @@ func _ready() -> void:
 		var target := preload("res://scripts/zaku_target.gd").new()
 		target.target_number = i+1
 		target.role = ["ASSAULT","FLANKER","SUPPORT"][i]
+		target.veteran = rules.level == 1
+		if target.veteran:
+			target.max_hp = 240
+			target.hp = 240
 		add_child(target)
 		target.position = arena.spawns()[i]
 		combat.targets.append(target)
@@ -175,7 +182,8 @@ func apply_quality() -> void:
 func save_settings() -> void:
 	var config := ConfigFile.new()
 	config.load("user://settings.cfg")
-	config.set_value("record","tactical_%d" % arena.index,best_time)
+	config.set_value("record",rules.record_key()+"_time",best_time)
+	config.set_value("record",rules.record_key()+"_score",best_score)
 	config.set_value("settings","low_quality",low_quality)
 	config.set_value("settings","muted",sounds.muted)
 	config.save("user://settings.cfg")
@@ -200,6 +208,10 @@ func _process(delta: float) -> void:
 		average_fps /= fps_samples.size()
 func _physics_process(delta: float) -> void:
 	var command: Dictionary = pilot.sample()
+	if command.get("difficulty",false) and mode in ["ready","result"]:
+		Rules.selected = 1-rules.level
+		get_tree().reload_current_scene()
+		return
 	if command.get("arena",false) and mode in ["ready","result"]:
 		Arena.selected = (arena.index+1)%Arena.NAMES.size()
 		get_tree().reload_current_scene()
@@ -237,8 +249,9 @@ func _physics_process(delta: float) -> void:
 		mode = "result"
 		pilot.menu_open = true
 		pilot.clear()
-		if combat.won and (best_time == 0 or combat.elapsed < best_time):
-			best_time = combat.elapsed
+		if combat.won:
+			if best_time == 0 or combat.elapsed < best_time: best_time = combat.elapsed
+			best_score = maxi(best_score,rules.score(combat,unit))
 			save_settings()
 
 # Boundary for a future host-authoritative 4-player session. No transport yet.
@@ -246,4 +259,4 @@ func capture_snapshot(tick: int) -> Dictionary:
 	var enemies: Array = []
 	for target in combat.targets:
 		enemies.append({"id":target.target_number,"hp":target.hp,"role":target.role,"intent":target.brain.state,"attack_time":target.melee_clock.elapsed,"position":[target.position.x,target.position.y,target.position.z],"velocity":[target.velocity.x,target.velocity.y,target.velocity.z]})
-	return {"schema":2,"arena":arena.index,"attack":{"stage":combat.attack.stage(),"time":combat.attack.elapsed,"combo":combat.combo},"tick":tick,"mode":mode,"player":{"id":0,"state":unit.state.snapshot(),"position":[unit.position.x,unit.position.y,unit.position.z],"velocity":[unit.velocity.x,unit.velocity.y,unit.velocity.z],"yaw":unit.yaw,"ammo":combat.rifle.ammo,"reload":combat.rifle.reload_left,"weapon":combat.weapon},"enemies":enemies,"kills":combat.kills,"elapsed":combat.elapsed}
+	return {"schema":3,"arena":arena.index,"difficulty":rules.level,"broken_covers":arena.removed_covers,"attack":{"stage":combat.attack.stage(),"time":combat.attack.elapsed,"combo":combat.combo},"tick":tick,"mode":mode,"player":{"id":0,"state":unit.state.snapshot(),"position":[unit.position.x,unit.position.y,unit.position.z],"velocity":[unit.velocity.x,unit.velocity.y,unit.velocity.z],"yaw":unit.yaw,"ammo":combat.rifle.ammo,"reload":combat.rifle.reload_left,"weapon":combat.weapon},"enemies":enemies,"kills":combat.kills,"elapsed":combat.elapsed}
