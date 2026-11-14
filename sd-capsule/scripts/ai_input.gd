@@ -10,8 +10,22 @@ var route := PackedVector2Array()
 var stuck_clock := 0.0
 var last_position := Vector3.ZERO
 var route_left := 0.0
+var line_of_sight := true
+var blocked_time := 0.0
+var retreating := false
+var orbit_left := 3.8
+var support_offset := Vector3.ZERO
 func sample(actor: CharacterBody3D, player: CharacterBody3D, delta: float) -> Dictionary:
 	time += delta
+	blocked_time = 0.0 if line_of_sight else blocked_time+delta
+	orbit_left -= delta
+	if orbit_left <= 0 and dodge_left <= 0:
+		orbit_left = 3.8+actor.target_number*0.35
+		side = -side
+		route_left = 0
+	if role == "SUPPORT" and blocked_time > 0.8:
+		support_offset = Vector3(side*1.6,0,0)
+	else: support_offset = Vector3.ZERO
 	dodge_left = maxf(0,dodge_left-delta)
 	evade_cooldown = maxf(0,evade_cooldown-delta)
 	route_left -= delta
@@ -36,17 +50,29 @@ func sample(actor: CharacterBody3D, player: CharacterBody3D, delta: float) -> Di
 		speed = 4.4
 		fire = distance < 3.0
 		desired = player.global_position-toward*1.9
+		if actor.cooldown > 0 and distance < 4 and not actor.melee_clock.running:
+			state = "CIRCLE"
+			speed = 2.5
+			desired = player.global_position-toward*2.6+tangent*1.4
 	elif role == "FLANKER":
-		state = "FLANK"
-		desired = player.global_position-toward*9+tangent*6
+		if distance < 6: retreating = true
+		elif distance > 9: retreating = false
+		state = "RETREAT" if retreating else "FLANK"
+		desired = actor.global_position-toward*4+tangent*2 if retreating else player.global_position-toward*9+tangent*6
+		if blocked_time > 0.8 and not retreating:
+			state = "REPOSITION"
+			desired = player.global_position-toward*6+tangent*4
 		fire = distance < 24
 	else:
 		state = "AIM"
-		desired = actor.global_position # Elevated fire support holds its perch.
+		desired = actor.global_position # Hold the perch until sight is obstructed.
+		if support_offset != Vector3.ZERO:
+			state = "REPOSITION"
+			desired = actor.home+support_offset
 		fire = distance < 40
 		if distance < 6:
 			state = "RETREAT"
-			desired = actor.global_position-toward*5
+			desired = actor.home+Vector3(clampf(-toward.x*2,-1.7,1.7),0,clampf(-toward.z*2,-1.7,1.7))
 	var move := (desired-actor.global_position)
 	move.y = 0
 	if move.length() < 0.7: move = Vector3.ZERO
@@ -69,7 +95,7 @@ func sample(actor: CharacterBody3D, player: CharacterBody3D, delta: float) -> Di
 		separation.y = 0
 		if separation.length() > 0.01 and separation.length() < 1.8:
 			move += separation.normalized()*0.5
-	return {"move":move.limit_length(),"speed":speed,"fire":fire,"target":player.aim_point(),"evading":dodge_left>0}
+	return {"move":move.limit_length(),"speed":speed,"fire":fire and dodge_left <= 0,"target":player.aim_point(),"evading":dodge_left>0}
 func evade() -> void:
 	if evade_cooldown == 0:
 		dodge_left = 0.4

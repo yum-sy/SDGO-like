@@ -128,6 +128,7 @@ func _ready() -> void:
 			target.hp = 240
 		add_child(target)
 		target.position = arena.spawns()[i]
+		target.home = target.position
 		combat.targets.append(target)
 		target.destroyed.connect(combat.on_destroyed)
 	unit = UnitMotor.new()

@@ -80,8 +80,8 @@ func simulate(command: Dictionary, delta: float) -> void:
 		rig.land()
 		preload("res://scripts/ground_fx.gd").spawn(get_parent(),global_position)
 	grounded = is_on_floor()
-	if direction.length() > 0.1:
-		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 16 * delta)
+	if direction.length() > 0.1 and (not is_instance_valid(rig) or (rig.aim_left <= 0.1 and rig.swing_left == 0) or dash_left > 0):
+		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 1-exp(-16*delta))
 	animation_time += delta * Vector2(velocity.x,velocity.z).length()*1.5
 	if is_instance_valid(rig):
 		rig.boost_active = boosting or dash_left > 0

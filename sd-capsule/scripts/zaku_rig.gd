@@ -49,7 +49,7 @@ func animate(velocity: Vector3, windup: float, evade: bool, delta: float) -> voi
 	recoil = move_toward(recoil,0,delta*7)
 	hurt = move_toward(hurt,0,delta*5)
 	var speed := Vector2(velocity.x,velocity.z).length()
-	phase += delta * (7 + speed*1.5)
+	phase += delta * speed*2.6
 	var blend := 1-exp(-14*delta)
 	aim_weight = lerpf(aim_weight,1.0 if windup > 0 or recoil > 0.05 else 0.0,blend)
 	evade_weight = lerpf(evade_weight,1.0 if evade else 0.0,blend)

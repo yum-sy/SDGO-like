@@ -1,4 +1,4 @@
-# Capsule Sortie — Battlefield Update
+# Capsule Sortie — Duel Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -181,3 +181,12 @@ Added static industrial silhouettes, service gantries, painted lanes and launch 
 Gundam gait phase now follows actual horizontal speed, with subtle stride bob and travel lean. Grounded dash, landing and Zaku evade generate six-puff dust effects, capped at eight simultaneous effects with a 0.42s lifetime. Destruction layers four rising smoke puffs after sparks/flash; ordinary impacts allocate no smoke. All effects pause correctly and expire. No damage or movement speed changes.
 
 Validation: 120 headless checks and PWA checks passed; clean Web export. Destruction cleanup regression waits for actual maximum effect lifetime. Local browser victories: Cargo Yard 27.9s/HP84, Reactor Ring 12.5s/HP84. No console warnings/errors. Physical mobile performance remains unverified.
+
+
+## Duel Update - 2026-11-15
+
+Gundam preserves its active rifle facing while strafing, returns to movement-facing after the aiming pose expires, and uses local forward/lateral leg motion. Saber preparation/recovery ease smoothly while the authoritative active sweep remains unchanged. Fixed cumulative saber body banking; Zaku gait advances with speed and movement accelerates instead of snapping to its intended velocity. Committed attacks still stop translation to preserve telegraphs.
+
+Assault circles at close range during cooldown. Flanker retreats below 6m and resumes flanking above 9m, periodically changes orbit direction, and seeks a closer angle after blocked sight. Support checks real line of sight every 0.2s and shifts within 1.6m of its spawn on the firing deck after 0.8s obstruction. Retreat destinations also stay within the deck. Evasion cannot initiate a new attack. No input-reading or instant aim prediction added. Existing windups, damage and enemy HP remain unchanged.
+
+Validation: 132 headless checks and PWA verification passed; clean Web export. Browser tests covered pursuit saber finishing, simultaneous strafe/fire, defeat/retry, and wins on Cargo Yard (36.5s/HP84) and Reactor Ring (10.6s/HP84). No console warnings/errors. Physical mobile performance remains unverified.

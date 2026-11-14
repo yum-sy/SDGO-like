@@ -120,7 +120,8 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	var blend := 1-exp(-16*delta)
 	evade_weight = lerpf(evade_weight,1.0 if boost_active else 0.0,blend)
 	var local_motion := global_basis.inverse()*velocity
-	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08,blend)
+	var slash_bank := sin(attack_angle)*0.12 if swing_left > 0 else 0.0
+	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08+slash_bank,blend)
 	position.y = -landing*0.12 + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
 	for flame in thrusters:
 		flame.visible = boost_active
@@ -131,7 +132,10 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 		var side := 1.0 if joint_sides[key] == "L" else -1.0
 		var angle := sin(time) * stride * side
 		if "leg_" in key:
-			var leg_pose := angle if grounded else -0.25
+			var forward_weight := clampf(local_motion.z/7,-1,1)
+			var strafe_weight := clampf(local_motion.x/7,-1,1)
+			var leg_pose := angle*forward_weight if grounded else -0.25
+			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65,blend)
 			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
@@ -147,7 +151,6 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			if ("hand_" in key or "armor_" in key) and joint_sides[key] == gun_side:
 				joints[key].rotation.x = lerpf(joints[key].rotation.x,-0.8,blend)
 				joints[key].rotation.y = lerp_angle(joints[key].rotation.y,attack_angle*0.55,blend)
-		rotation.z += sin(attack_angle)*0.12
 
 func die() -> void:
 	down = true

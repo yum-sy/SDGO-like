@@ -37,8 +37,8 @@ func sweep_angle(at: float) -> float:
 	return lerpf(-1.15,1.15,sweep)*(1 if index%2 else -1)
 func pose_angle() -> float:
 	var c: Vector3 = clip()
-	if elapsed < c.x: return lerpf(-0.3,sweep_angle(c.x),elapsed/c.x)
-	if elapsed > c.x+c.y: return lerpf(sweep_angle(c.x+c.y),0.3,(elapsed-c.x-c.y)/c.z)
+	if elapsed < c.x: return lerpf(-0.3,sweep_angle(c.x),smoothstep(0,1,elapsed/c.x))
+	if elapsed > c.x+c.y: return lerpf(sweep_angle(c.x+c.y),0.3,smoothstep(0,1,(elapsed-c.x-c.y)/c.z))
 	return sweep_angle(elapsed)
 func intersects(offset: Vector3, facing: Vector3) -> bool:
 	var right := Vector3(facing.z,0,-facing.x)

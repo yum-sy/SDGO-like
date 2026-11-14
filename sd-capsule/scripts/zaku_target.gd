@@ -27,6 +27,7 @@ var knockback := Vector3.ZERO
 var ai_enabled := true
 var step_time := 0.0
 var was_evading := false
+var sight_left := 0.0
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 3
@@ -97,6 +98,12 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 		return
 	stun = maxf(0,stun-delta)
 	cooldown = maxf(0,cooldown-delta)
+	sight_left -= delta
+	if sight_left <= 0:
+		sight_left = 0.2
+		var sight_query := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()])
+		var sight_hit := get_world_3d().direct_space_state.intersect_ray(sight_query)
+		brain.line_of_sight = not sight_hit.is_empty() and sight_hit.collider == player
 	var command := brain.sample(self,player,delta)
 	if veteran: command.speed *= 1.18
 	var direction: Vector3 = command.move
@@ -112,8 +119,16 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	var probe := PhysicsRayQueryParameters3D.create(aim_point(),aim_point()+direction*2,1,[get_rid(),player.get_rid()])
 	if not get_world_3d().direct_space_state.intersect_ray(probe).is_empty():
 		direction = direction.rotated(Vector3.UP, PI*0.5*brain.side)
-	velocity.x = direction.x * command.speed if stun == 0 else knockback.x
-	velocity.z = direction.z * command.speed if stun == 0 else knockback.z
+	if stun > 0:
+		velocity.x = knockback.x
+		velocity.z = knockback.z
+	elif windup > 0 or melee_clock.running:
+		velocity.x = 0
+		velocity.z = 0
+	else:
+		var acceleration := 40.0 if brain.dodge_left > 0 else 18.0
+		velocity.x = move_toward(velocity.x,direction.x*command.speed,acceleration*delta)
+		velocity.z = move_toward(velocity.z,direction.z*command.speed,acceleration*delta)
 	knockback = knockback.move_toward(Vector3.ZERO,20*delta)
 	velocity.y -= 24*delta
 	move_and_slide()
