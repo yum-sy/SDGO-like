@@ -76,6 +76,7 @@ export GODOT_BIN=/path/to/godot
 "$GODOT_BIN" --headless --path sd-capsule --script tests/demo_test.gd
 "$GODOT_BIN" --headless --path sd-capsule --script tests/polish_test.gd
 python3 sd-capsule/tools/build_web.py --godot "$GODOT_BIN"
+node sd-capsule/tests/pwa_test.mjs
 python3 -m http.server 8063 --bind 127.0.0.1 --directory sd-capsule/dist
 ```
 
@@ -101,6 +102,7 @@ python3 -m http.server 8063 --bind 127.0.0.1 --directory sd-capsule/dist
 
 2026-11-14 개발 환경 기준. 아래 FPS/오프라인 검사는 1차 데모 기준이며, 이후 모션·그림자가 추가된 빌드의 실기기 성능 보장이 아닙니다:
 
+- 생성된 서비스워커를 오래된 HTTP 캐시/오프라인 조건에서 실행하는 Node 회귀 검사 통과
 - headless 전투 13개 + 확장 14개 + 완성도 회귀 17개 = 44개 통과
 - 180HP 전투 설정, 자쿠 관절/반동/격파, 사벨 대기 자세, 부스터 표시, 적 근접 공격과 이탈 회피, 이펙트 최대 개수/소멸 검증
 - 라이플 명중/쿨다운/재장전, 벽 가림/관통 방지, 범위, 승리 및 중복 격파 방지
