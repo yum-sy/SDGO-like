@@ -17,6 +17,7 @@ var saved_result := false
 var fps_samples: Array[float] = []
 var sample_clock := 0.0
 var average_fps := 0.0
+var safe_clock := 1.0
 
 func box(parent: Node3D, size: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
@@ -151,6 +152,14 @@ func save_settings() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.force_fs_sync()
 func _process(delta: float) -> void:
+	safe_clock += delta
+	if OS.has_feature("web") and safe_clock > 1:
+		safe_clock = 0
+		var insets = JSON.parse_string(str(JavaScriptBridge.eval("JSON.stringify(window.capsuleSafeInsets || [0,0,0,0])")))
+		var css_width: float = float(JavaScriptBridge.eval("innerWidth"))
+		if insets is Array and insets.size() == 4 and css_width > 0:
+			var ratio := get_viewport().get_visible_rect().size.x/css_width
+			preload("res://scripts/control_layout.gd").safe = Vector4(insets[0],insets[1],insets[2],insets[3])*ratio
 	sample_clock += delta
 	if sample_clock > 0.5:
 		sample_clock = 0

@@ -1,4 +1,4 @@
-const CACHE="capsule-47fded8efd965541";
+const CACHE="capsule-aae7636873af961f";
 const FILES=["CREDITS.txt", "app.js", "index.144x144.png", "index.180x180.png", "index.192x192.png", "index.512x512.png", "index.apple-touch-icon.png", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.js", "index.manifest.json", "index.offline.html", "index.pck", "index.png", "index.wasm"];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('capsule-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));

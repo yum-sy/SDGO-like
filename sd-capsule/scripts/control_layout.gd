@@ -1,5 +1,7 @@
 extends RefCounted
+static var safe := Vector4.ZERO
 static func buttons(size: Vector2) -> Dictionary:
+	size -= Vector2(safe.z,safe.w)
 	return {
 		"fire":Rect2(size-Vector2(150,160),Vector2(110,110)),
 		"melee":Rect2(size-Vector2(280,160),Vector2(110,110)),

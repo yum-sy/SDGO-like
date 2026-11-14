@@ -1,4 +1,9 @@
 (() => {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+  document.body.appendChild(probe);
+  const safe = () => { const css=getComputedStyle(probe); window.capsuleSafeInsets=[css.paddingLeft,css.paddingTop,css.paddingRight,css.paddingBottom].map(v=>parseFloat(v)||0); };
+  safe(); window.addEventListener('resize',safe);
   const note = document.getElementById('pwa-note');
   const install = document.getElementById('install');
   const update = document.getElementById('update');
