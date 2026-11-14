@@ -1,6 +1,7 @@
 extends Node3D
 # Six rigid joints reconstructed from source mesh islands, not skeletal skinning.
 var joints := {}
+var strike_phase := -1.0
 var strike_left := 0.0
 var recoil := 0.0
 var hurt := 0.0
@@ -26,6 +27,8 @@ func _ready() -> void:
 func fire() -> void: recoil = 1.0
 func hit() -> void: hurt = 1.0
 func strike() -> void: strike_left = 0.35
+func apply_strike_pose() -> void:
+	if strike_phase >= 0: joints.arm_R.rotation.x = lerpf(-0.25,-1.45,strike_phase)
 func die() -> void:
 	dying = true
 	death_time = 0
@@ -47,7 +50,10 @@ func animate(velocity: Vector3, windup: float, evade: bool, delta: float) -> voi
 	joints.leg_R.rotation.x = -wave
 	joints.arm_L.rotation.x = -wave*0.45 - windup*0.45 + recoil*0.25
 	joints.arm_R.rotation.x = wave*0.45 - windup*0.45 + recoil*0.25
-	joints.arm_R.rotation.x -= sin(strike_left/0.35*PI)*1.2
+	if strike_phase >= 0:
+		joints.arm_R.rotation.x = lerpf(-0.25,-1.45,strike_phase)
+	else:
+		joints.arm_R.rotation.x -= sin(strike_left/0.35*PI)*1.2
 	joints.head.rotation.y = sin(phase*0.17)*0.06
 	joints.torso.rotation.x = -hurt*0.18 + recoil*0.08
 	position.y = absf(sin(phase))*stride*0.12

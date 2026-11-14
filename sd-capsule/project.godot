@@ -1,6 +1,8 @@
 config_version=5
 [application]
-config/name="Capsule Sortie · Combat Update"
+config/name="Capsule Sortie · Tactical Update"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="CapsuleSortie"
 run/main_scene="res://main.tscn"
 [display]
 window/size/viewport_width=1280

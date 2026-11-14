@@ -12,6 +12,8 @@ var landing := 0.0
 var boost_active := false
 var reload_progress := 0.0
 var thrusters: Array[MeshInstance3D] = []
+var attack_angle := 0.0
+var attack_stage := "READY"
 var swing_left := 0.0
 var swing_duration := 0.32
 var swing_index := 0
@@ -54,6 +56,17 @@ func _ready() -> void:
 	mat.albedo_color = Color(1,0.2,0.75)
 	saber.material_override = mat
 	add_child(saber)
+	var grip := MeshInstance3D.new()
+	var handle := CylinderMesh.new()
+	handle.top_radius = 0.07
+	handle.bottom_radius = 0.07
+	handle.height = 0.22
+	grip.mesh = handle
+	var grip_mat := StandardMaterial3D.new()
+	grip_mat.albedo_color = Color("394856")
+	grip.material_override = grip_mat
+	grip.position.y = -0.91
+	saber.add_child(grip)
 	saber.hide()
 	for side in [-1,1]:
 		var flame := MeshInstance3D.new()
@@ -73,10 +86,23 @@ func _ready() -> void:
 func fire() -> void: recoil = 1.0
 func hit() -> void: hurt = 1.0
 func land() -> void: landing = 1.0
-func swing(combo: int) -> void:
-	swing_index = combo
-	swing_left = 0.32 if combo < 3 else 0.45
-	swing_duration = swing_left
+func set_attack_pose(clock: RefCounted) -> void:
+	swing_index = clock.index
+	attack_stage = clock.stage()
+	attack_angle = clock.pose_angle()
+	swing_left = 1.0 if clock.running else 0.0
+	apply_blade_pose()
+func apply_blade_pose() -> void:
+	saber.visible = swing_left > 0 or saber_equipped
+	if is_instance_valid(weapon): weapon.visible = not saber.visible
+	if swing_left > 0:
+		# The same local arc is used by the authoritative swept hit test.
+		var direction := Vector3(sin(attack_angle),0,cos(attack_angle))
+		saber.position = Vector3(-0.65,1.15,0.55)+direction*0.8
+		saber.basis = Basis(Quaternion(Vector3.UP,direction))
+	else:
+		saber.position = Vector3(-0.65,1.4,0.6)
+		saber.rotation = Vector3(0.2,0,-0.2)
 func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> void:
 	recoil = move_toward(recoil,0,delta*9)
 	hurt = move_toward(hurt,0,delta*5)
@@ -87,7 +113,6 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	for flame in thrusters:
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
-	swing_left = maxf(0,swing_left-delta)
 	var stride := clampf(Vector2(velocity.x,velocity.z).length()/7.0,0,1) * 0.35 if grounded else 0.0
 	for key in joints:
 		var joint: Node3D = joints[key]
@@ -97,22 +122,12 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			joint.rotation.x = angle if grounded else -0.25
 		else:
 			joint.rotation.x = -angle * 0.4 - recoil*0.25 - sin(reload_progress*PI)*0.65
-	saber.visible = swing_left > 0 or saber_equipped
-	if is_instance_valid(weapon):
-		weapon.visible = not saber.visible
-	if saber_equipped and swing_left == 0:
-		saber.position = Vector3(-0.65,1.4,0.6)
-		saber.rotation = Vector3(0.2,0,-0.2)
+	apply_blade_pose()
 	if swing_left > 0:
-		var phase := 1 - swing_left / swing_duration
-		var arc := lerpf(-1.2,1.2,phase) * (1 if swing_index % 2 else -1)
-		saber.position = Vector3(-0.65,1.25,0.5)
-		saber.rotation = Vector3(PI*0.5,0,arc)
-		saber.position += Vector3(sin(arc),0,cos(arc)) * 0.7
 		for key in joints:
 			if "hand_" in key or "armor_shield" in key:
-				joints[key].rotation.x = -0.6 + sin(phase*PI)*0.8
-		rotation.z += sin(arc)*0.12
+				joints[key].rotation.x = -0.6 + sin(attack_angle)*0.5
+		rotation.z += sin(attack_angle)*0.12
 
 func die() -> void:
 	down = true

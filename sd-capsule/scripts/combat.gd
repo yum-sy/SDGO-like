@@ -3,8 +3,13 @@ const Bolt = preload("res://scripts/enemy_bolt.gd")
 const FX = preload("res://scripts/combat_fx.gd")
 const Rifle = preload("res://scripts/beam_rifle.gd")
 const RANGE := 45.0
+var attack := preload("res://scripts/attack_clock.gd").new()
+var attack_facing := Vector3.FORWARD
+var melee_buffer := 0.0
+var melee_was_held := false
 var rifle := Rifle.new()
 var targets: Array = []
+var manual_target_left := 0.0
 var selected: Node3D
 var player: CharacterBody3D
 var camera: Camera3D
@@ -45,6 +50,21 @@ func eligible(target: Node3D) -> bool:
 	return not obstruction.is_empty() and obstruction.collider == target
 
 func update_target(cycle: bool) -> void:
+	if cycle:
+		var available: Array = []
+		for target in targets:
+			if target.hp <= 0 or player.global_position.distance_to(target.global_position) > RANGE: continue
+			var sight := ray(player.aim_point(),target.aim_point())
+			if not sight.is_empty() and sight.collider == target: available.append(target)
+		if not available.is_empty():
+			selected = available[(available.find(selected)+1)%available.size()]
+			var offset: Vector3 = selected.global_position-player.global_position
+			player.focus_yaw = atan2(-offset.x,-offset.z)
+			manual_target_left = 0.35
+			return
+	if manual_target_left > 0 and not is_nan(player.focus_yaw) and is_instance_valid(selected) and selected.hp > 0:
+		var sight := ray(player.aim_point(),selected.aim_point())
+		if player.global_position.distance_to(selected.global_position) <= RANGE and not sight.is_empty() and sight.collider == selected: return
 	var candidates: Array = []
 	for target in targets:
 		if eligible(target):
@@ -63,6 +83,7 @@ func step(command: Dictionary, delta: float) -> void:
 	if won or lost:
 		return
 	elapsed += delta
+	manual_target_left = maxf(0,manual_target_left-delta)
 	camera_trauma = move_toward(camera_trauma,0,delta*3)
 	for popup in damage_popups: popup.life -= delta
 	damage_popups = damage_popups.filter(func(p): return p.life > 0)
@@ -76,16 +97,22 @@ func step(command: Dictionary, delta: float) -> void:
 		lost = true
 		clear_bolts()
 		return
+	if player.dash_left > 0 and attack.running: cancel_melee()
+	advance_melee(delta)
 	update_target(command.get("cycle",false))
 	if command.get("weapon",false):
 		weapon = 1-weapon
 	player.rig.saber_equipped = weapon == 1
 	if command.get("reload",false):
 		rifle.reload()
-	if command.get("melee",false) or (command.get("fire",false) and weapon == 1):
-		if melee_cooldown == 0:
-			melee()
-	elif command.get("fire",false) and melee_cooldown == 0 and rifle.try_fire():
+	var melee_requested: bool = command.get("melee",false) or (command.get("fire",false) and weapon == 1)
+	melee_buffer = maxf(0,melee_buffer-delta)
+	if melee_requested and not melee_was_held: melee_buffer = 0.18
+	melee_was_held = melee_requested
+	if (melee_requested or melee_buffer > 0) and not attack.running and melee_cooldown == 0 and player.dash_left == 0:
+		melee()
+		melee_buffer = 0
+	elif command.get("fire",false) and weapon == 0 and not attack.running and melee_cooldown == 0 and is_nan(player.focus_yaw) and rifle.try_fire():
 		shoot()
 	if rifle.reload_left > 0 and not was_reloading: sound("reload")
 	if rifle.reload_left == 0 and was_reloading: sound("ready")
@@ -110,35 +137,54 @@ func enemy_shot(shooter: CharacterBody3D, point: Vector3) -> void:
 	bolt.global_position = shooter.aim_point()
 	bolt.velocity = (point-bolt.global_position).normalized()*17
 	sound("enemy")
+func cancel_melee() -> void:
+	attack.cancel()
+	melee_buffer = 0
+	combo_window = 0
+	melee_cooldown = 0.18
+	player.attack_slow = 1.0
+	player.rig.set_attack_pose(attack)
 func melee() -> void:
 	combo = combo%3+1 if combo_window > 0 else 1
-	combo_window = 0.9
-	melee_cooldown = 0.3 if combo < 3 else 0.65
-	var damage_amount: int = [25,30,45][combo-1]
-	var facing := -Basis(Vector3.UP,player.yaw).z
-	if is_instance_valid(selected) and player.global_position.distance_to(selected.global_position) < 5:
-		facing = (selected.global_position-player.global_position).normalized()
-		facing.y = 0
-		player.visual.rotation.y = atan2(-facing.x,-facing.z)
-		player.impulse = facing*4
-	if is_instance_valid(player.rig):
-		player.rig.swing(combo)
-	sound("saber")
-	message = "SABER COMBO %d" % combo
-	for target in targets:
-		if target.hp <= 0:
-			continue
-		var offset: Vector3 = target.aim_point()-player.aim_point()
-		if offset.length() > 3.4 or (offset.length()>0.1 and facing.dot(offset.normalized()) < 0.3):
-			continue
-		var obstruction := ray(player.aim_point(),target.aim_point())
-		if not obstruction.is_empty() and obstruction.collider == target:
-			target.damage(damage_amount)
-			impact(target.aim_point(),damage_amount,Color(1,0.25,0.6))
-			camera_trauma = 0.35 if combo == 3 else 0.16
-			target.knockback = facing*(9 if combo == 3 else 3)
-			hit_left = 0.18
-			sound("hit")
+	attack.begin(combo)
+	combo_window = attack.duration()+0.6
+	melee_cooldown = attack.duration()
+	attack_facing = -Basis(Vector3.UP,player.yaw).z
+	if is_instance_valid(selected) and player.global_position.distance_to(selected.global_position) < 4:
+		attack_facing = selected.global_position-player.global_position
+		attack_facing.y = 0
+		attack_facing = attack_facing.normalized()
+	player.visual.rotation.y = atan2(-attack_facing.x,-attack_facing.z)
+	player.rig.set_attack_pose(attack)
+	message = "SABER %d / WINDUP" % combo
+func advance_melee(delta: float) -> void:
+	if not attack.running: return
+	var strike := attack.advance(delta)
+	player.visual.rotation.y = atan2(-attack_facing.x,-attack_facing.z)
+	player.attack_slow = 0.55 if attack.stage() == "WINDUP" else 0.35
+	player.rig.set_attack_pose(attack)
+	if strike:
+		if attack.previous < attack.CLIPS[combo-1].x:
+			sound("saber")
+			player.impulse = attack_facing*3
+		for target in targets:
+			if target.hp <= 0 or attack.hit_ids.has(target.get_instance_id()): continue
+			var offset: Vector3 = target.aim_point()-player.aim_point()
+			if not attack.intersects(offset,attack_facing): continue
+			var obstruction := ray(player.aim_point(),target.aim_point())
+			if not obstruction.is_empty() and obstruction.collider == target:
+				attack.hit_ids[target.get_instance_id()] = true
+				var amount: int = [25,30,45][combo-1]
+				target.damage(amount)
+				target.knockback = attack_facing*(9 if combo == 3 else 3)
+				impact(target.aim_point(),amount,Color(1,0.25,0.6))
+				camera_trauma = 0.35 if combo == 3 else 0.16
+				hit_left = 0.18
+				sound("hit")
+	attack.finish_tick()
+	if not attack.running:
+		player.attack_slow = 1.0
+		player.rig.set_attack_pose(attack)
 
 func shoot() -> void:
 	shots += 1

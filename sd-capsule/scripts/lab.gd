@@ -2,6 +2,8 @@ extends Node3D
 const Bolt = preload("res://scripts/enemy_bolt.gd")
 const PilotInput = preload("res://scripts/pilot_input.gd")
 const UnitMotor = preload("res://scripts/unit_motor.gd")
+const Arena = preload("res://scripts/arena_layout.gd")
+var arena := Arena.new()
 var combat: Node3D
 var pilot: Node
 var unit: CharacterBody3D
@@ -58,9 +60,11 @@ func crate(at: Vector3) -> void:
 	collision.position.y = 1.35
 	body.add_child(collision)
 func _ready() -> void:
+	arena.index = Arena.selected
+	arena.build_navigation()
 	var config := ConfigFile.new()
 	if config.load("user://settings.cfg") == OK:
-		best_time = config.get_value("record","best_combat",0.0)
+		best_time = config.get_value("record","tactical_%d" % arena.index,0.0)
 		low_quality = config.get_value("settings","low_quality",false)
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
@@ -87,8 +91,12 @@ func _ready() -> void:
 	for side in [-1,1]:
 		block(Vector3(1,5,60),Vector3(side*30,2.5,0),Color("26394b"))
 		block(Vector3(60,5,1),Vector3(0,2.5,side*30),Color("26394b"))
-	for p in [Vector3(-9,0,-6),Vector3(9,0,-6),Vector3(-13,0,9),Vector3(13,0,9),Vector3(-5,0,-16),Vector3(6,0,-21)]:
-		crate(p)
+	for p in arena.crates(): crate(p)
+	for structure in arena.structures():
+		block(structure.size,structure.at,Color("394e61"))
+		box(self,Vector3(structure.size.x,0.04,structure.size.z),structure.at+Vector3.UP*(structure.size.y/2+0.03),Color("55798b"))
+		# Edge lights make the boost-accessible raised firing deck readable.
+		box(self,Vector3(structure.size.x,0.12,0.1),structure.at+Vector3(0,structure.size.y/2,structure.size.z/2),Color("69ced5"))
 	for side in [-1,1]:
 		for z in range(-25,30,10):
 			box(self,Vector3(0.08,0.18,3),Vector3(side*29.45,0.4,z),Color("5ca6b1"))
@@ -97,8 +105,9 @@ func _ready() -> void:
 	for i in range(3):
 		var target := preload("res://scripts/zaku_target.gd").new()
 		target.target_number = i+1
+		target.role = ["ASSAULT","FLANKER","SUPPORT"][i]
 		add_child(target)
-		target.position = [Vector3(-13,0,-17),Vector3(0,0,-13),Vector3(13,0,-21)][i]
+		target.position = arena.spawns()[i]
 		combat.targets.append(target)
 		target.destroyed.connect(combat.on_destroyed)
 	unit = UnitMotor.new()
@@ -118,7 +127,7 @@ func _ready() -> void:
 	model.rotation.y = PI
 	unit.visual.add_child(model)
 	unit.rig = model
-	unit.hit.connect(func(): combat.hurt_left = 0.3; combat.camera_trauma = 0.4; combat.sound("hit"))
+	unit.hit.connect(func(): combat.hurt_left = 0.3; combat.camera_trauma = 0.4; combat.sound("hit"); combat.cancel_melee())
 	pilot = PilotInput.new()
 	add_child(pilot)
 	pivot = Node3D.new()
@@ -165,7 +174,8 @@ func apply_quality() -> void:
 	get_viewport().mesh_lod_threshold = 3.0 if low_quality else 1.5
 func save_settings() -> void:
 	var config := ConfigFile.new()
-	config.set_value("record","best_combat",best_time)
+	config.load("user://settings.cfg")
+	config.set_value("record","tactical_%d" % arena.index,best_time)
 	config.set_value("settings","low_quality",low_quality)
 	config.set_value("settings","muted",sounds.muted)
 	config.save("user://settings.cfg")
@@ -190,6 +200,10 @@ func _process(delta: float) -> void:
 		average_fps /= fps_samples.size()
 func _physics_process(delta: float) -> void:
 	var command: Dictionary = pilot.sample()
+	if command.get("arena",false) and mode in ["ready","result"]:
+		Arena.selected = (arena.index+1)%Arena.NAMES.size()
+		get_tree().reload_current_scene()
+		return
 	if command.mute:
 		sounds.muted = not sounds.muted
 		save_settings()
@@ -231,5 +245,5 @@ func _physics_process(delta: float) -> void:
 func capture_snapshot(tick: int) -> Dictionary:
 	var enemies: Array = []
 	for target in combat.targets:
-		enemies.append({"id":target.target_number,"hp":target.hp,"position":[target.position.x,target.position.y,target.position.z],"velocity":[target.velocity.x,target.velocity.y,target.velocity.z]})
-	return {"schema":1,"tick":tick,"mode":mode,"player":{"id":0,"state":unit.state.snapshot(),"position":[unit.position.x,unit.position.y,unit.position.z],"velocity":[unit.velocity.x,unit.velocity.y,unit.velocity.z],"yaw":unit.yaw,"ammo":combat.rifle.ammo,"reload":combat.rifle.reload_left,"weapon":combat.weapon},"enemies":enemies,"kills":combat.kills,"elapsed":combat.elapsed}
+		enemies.append({"id":target.target_number,"hp":target.hp,"role":target.role,"intent":target.brain.state,"attack_time":target.melee_clock.elapsed,"position":[target.position.x,target.position.y,target.position.z],"velocity":[target.velocity.x,target.velocity.y,target.velocity.z]})
+	return {"schema":2,"arena":arena.index,"attack":{"stage":combat.attack.stage(),"time":combat.attack.elapsed,"combo":combat.combo},"tick":tick,"mode":mode,"player":{"id":0,"state":unit.state.snapshot(),"position":[unit.position.x,unit.position.y,unit.position.z],"velocity":[unit.velocity.x,unit.velocity.y,unit.velocity.z],"yaw":unit.yaw,"ammo":combat.rifle.ammo,"reload":combat.rifle.reload_left,"weapon":combat.weapon},"enemies":enemies,"kills":combat.kills,"elapsed":combat.elapsed}

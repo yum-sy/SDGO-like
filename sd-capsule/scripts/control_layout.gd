@@ -12,4 +12,4 @@ static func buttons(size: Vector2) -> Dictionary:
 		"cycle":Rect2(size-Vector2(145,400),Vector2(100,80)),
 		"pause":Rect2(Vector2(size.x-120,54),Vector2(80,58))}
 static func menu_buttons(size: Vector2) -> Dictionary:
-	return {"mute":Rect2(Vector2(size.x*0.5-280,size.y*0.5+105),Vector2(180,52)),"quality":Rect2(Vector2(size.x*0.5-80,size.y*0.5+105),Vector2(220,52))}
+	return {"arena":Rect2(Vector2(size.x*0.5-280,size.y*0.5+170),Vector2(420,52)),"mute":Rect2(Vector2(size.x*0.5-280,size.y*0.5+105),Vector2(180,52)),"quality":Rect2(Vector2(size.x*0.5-80,size.y*0.5+105),Vector2(220,52))}

@@ -37,8 +37,9 @@ func run() -> void:
 	await physics_frame
 	battle.update_target(false)
 	check(battle.selected == target,"close target acquired for melee")
-	for dt in [0.01,0.31,0.31]:
-		battle.step({"melee":true},dt)
+	for i in range(3):
+		battle.step({"melee":true},0.016)
+		for tick in range(45): battle.step({},1.0/60.0)
 	check(target.hp == 0 and battle.combo == 3,"three-hit saber combo defeats 100HP target")
 	check(target.knockback.length() > 8,"finisher applies knockback")
 	check(player.rig.joints.size() >= 8,"rigid-part joints prepared")

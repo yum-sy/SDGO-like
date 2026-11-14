@@ -44,13 +44,14 @@ func run() -> void:
 	await physics_frame
 	attacker.step(scene.unit,scene.combat,0.016)
 	check(attacker.attack_kind == "melee" and attacker.windup > 0,"close enemy telegraphs melee before dealing damage")
-	attacker.windup = 0.01
+	attacker.melee_clock.elapsed = 0.54
 	attacker.step(scene.unit,scene.combat,0.016)
 	check(scene.unit.hp == 88,"telegraphed close attack deals damage on contact")
 	scene.unit.state.invulnerable = 0
 	scene.unit.position = Vector3(0,0,10)
 	attacker.attack_kind = "melee"
-	attacker.windup = 0.01
+	attacker.melee_clock.begin(1)
+	attacker.melee_clock.elapsed = 0.54
 	attacker.step(scene.unit,scene.combat,0.016)
 	check(scene.unit.hp == 88,"escaping melee range avoids enemy strike")
 	enemy.damage(200)

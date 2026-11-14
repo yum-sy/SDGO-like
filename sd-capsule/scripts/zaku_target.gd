@@ -1,6 +1,11 @@
 extends CharacterBody3D
 signal destroyed(target)
 const Brain = preload("res://scripts/ai_input.gd")
+var melee_clock := preload("res://scripts/attack_clock.gd").new()
+var melee_facing := Vector3.FORWARD
+var role := "ASSAULT"
+var home := Vector3.ZERO
+var aim_line: MeshInstance3D
 var brain := Brain.new()
 var max_hp := 180
 var hp := 180
@@ -21,6 +26,8 @@ var step_time := 0.0
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 3
+	brain.role = role
+	melee_clock.custom_clip = Vector3(0.55,0.14,0.45)
 	brain.side = -1 if target_number % 2 else 1
 	cooldown += target_number * 0.25
 	model = preload("res://assets/prepared/zaku.scn").instantiate()
@@ -46,6 +53,17 @@ func _ready() -> void:
 	flash_mesh.material_override = material
 	flash_mesh.visible = false
 	add_child(flash_mesh)
+	aim_line = MeshInstance3D.new()
+	var line := BoxMesh.new()
+	line.size = Vector3(0.025,0.025,1)
+	aim_line.mesh = line
+	var line_mat := StandardMaterial3D.new()
+	line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	line_mat.albedo_color = Color(1,0.55,0.15)
+	aim_line.material_override = line_mat
+	add_child(aim_line)
+	aim_line.top_level = true
+	aim_line.hide()
 func aim_point() -> Vector3:
 	return global_position + Vector3.UP * 1.05
 func damage(amount: int) -> void:
@@ -58,6 +76,8 @@ func damage(amount: int) -> void:
 	burst_left = 0
 	brain.evade()
 	model.hit()
+	melee_clock.cancel()
+	model.strike_phase = -1
 	if hp == 0:
 		collision_layer = 0
 		collision_mask = 0
@@ -70,7 +90,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	cooldown = maxf(0,cooldown-delta)
 	var command := brain.sample(self,player,delta)
 	var direction: Vector3 = command.move
-	if windup > 0: command.speed *= 0.3
+	if windup > 0 or melee_clock.running: command.speed = 0
 	if burst_left > 0 and stun == 0:
 		burst_delay -= delta
 		if burst_delay <= 0:
@@ -88,36 +108,60 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	velocity.y -= 24*delta
 	move_and_slide()
 	var toward := player.global_position-global_position
+	if melee_clock.running: toward = melee_facing
 	model.rotation.y = lerp_angle(model.rotation.y,atan2(toward.x,toward.z),8*delta)
 	model.animate(velocity,windup,brain.dodge_left > 0,delta)
-	if windup > 0:
+	if melee_clock.running:
+		var active := melee_clock.advance(delta)
+		windup = maxf(0,0.55-melee_clock.elapsed)
+		model.strike_phase = clampf((melee_clock.elapsed-0.55)/0.14,0,1)
+		if melee_clock.stage() == "RECOVERY": model.strike_phase = 1-clampf((melee_clock.elapsed-0.69)/0.45,0,1)
+		model.apply_strike_pose()
+		if active and not melee_clock.hit_ids.has(player.get_instance_id()):
+			var offset: Vector3 = player.aim_point()-aim_point()
+			var contact := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()]))
+			if offset.length() < 2.8 and offset.normalized().dot(melee_facing) > 0.45 and not contact.is_empty() and contact.collider == player:
+				melee_clock.hit_ids[player.get_instance_id()] = true
+				var before: int = player.hp
+				player.damage(12)
+				if player.hp < before:
+					player.impulse = melee_facing*7
+					battle.impact(player.aim_point(),12,Color(1,0.4,0.2))
+		melee_clock.finish_tick()
+		if not melee_clock.running: model.strike_phase = -1
+	elif windup > 0:
 		windup = maxf(0,windup-delta)
 		if windup == 0 and stun == 0:
 			model.fire()
-			if attack_kind == "melee":
-				model.strike()
-				var melee_ray := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()])
-				var contact := get_world_3d().direct_space_state.intersect_ray(melee_ray)
-				if global_position.distance_to(player.global_position) < 3.0 and not contact.is_empty() and contact.collider == player:
-					player.damage(12)
-					player.impulse = (player.global_position-global_position).normalized()*7
-					battle.impact(player.aim_point(),12,Color(1,0.4,0.2))
-			else:
-				battle.enemy_shot(self,pending_aim)
-				burst_left = 1
-				burst_delay = 0.18
+			battle.enemy_shot(self,pending_aim)
+			burst_left = 2 if role == "SUPPORT" else 1
+			burst_delay = 0.18
 	elif command.fire and cooldown == 0 and stun == 0:
-		var sight := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),1,[get_rid()])
+		var sight := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()])
 		var hit := get_world_3d().direct_space_state.intersect_ray(sight)
 		if not hit.is_empty() and hit.collider == player:
 			pending_aim = player.aim_point()
 			attack_kind = "melee" if global_position.distance_to(player.global_position) < 3 else "ranged"
-			windup = 0.6 if attack_kind == "melee" else 0.65
-			cooldown = 1.8 + target_number*0.25
+			if attack_kind == "melee":
+				melee_facing = player.global_position-global_position
+				melee_facing.y = 0
+				melee_facing = melee_facing.normalized()
+				melee_clock.begin(1)
+				windup = 0.55
+			else:
+				windup = 1.0 if role == "SUPPORT" else 0.65
+			cooldown = 1.7 if role == "ASSAULT" else 2.8
 	if position.y < -12:
-		damage(100)
+		damage(max_hp)
 func _process(delta: float) -> void:
 	if get_parent().get("mode") == "paused": return
 	if hp <= 0: model.animate(Vector3.ZERO,0,false,delta)
+	aim_line.visible = hp > 0 and windup > 0 and attack_kind == "ranged" and role == "SUPPORT"
+	if aim_line.visible:
+		var start := aim_point()
+		aim_line.global_position = (start+pending_aim)*0.5
+		if start.distance_to(pending_aim) > 0.01:
+			aim_line.look_at(pending_aim,Vector3.UP)
+			aim_line.scale.z = start.distance_to(pending_aim)
 	flash_left = maxf(0,flash_left-delta)
 	flash_mesh.visible = hp > 0 and flash_left > 0

@@ -16,7 +16,11 @@ func run() -> void:
 	await physics_frame
 	scene.set_physics_process(false)
 	# Fixed 100HP fixture isolates weapon arithmetic from encounter tuning.
-	for enemy in scene.combat.targets: enemy.hp = 100
+	for i in range(3):
+		scene.combat.targets[i].hp = 100
+		scene.combat.targets[i].position = Vector3((i-1)*4,0,-10)
+	await physics_frame
+	await physics_frame
 	var combat = scene.combat
 	combat.ai_enabled = false
 	combat.update_target(false)
@@ -25,6 +29,9 @@ func run() -> void:
 	combat.update_target(true)
 	check(combat.selected != original, "Tab cycles eligible targets")
 	var target = combat.selected
+	scene.unit.yaw = scene.unit.focus_yaw
+	scene.unit.focus_yaw = NAN
+	scene.update_camera()
 	combat.step({"fire":true,"reload":false,"cycle":false}, 0.01)
 	check(target.hp == 75 and combat.rifle.ammo == 5, "ray hits target and consumes one round")
 	combat.step({"fire":true,"reload":false,"cycle":false}, 0.01)

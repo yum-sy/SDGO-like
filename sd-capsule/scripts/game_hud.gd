@@ -33,7 +33,7 @@ func _draw() -> void:
 		text(Vector2(left,244),"RELOADING %.1f s" % rifle.reload_left,18,Color(1,0.8,0.35))
 		bar(Vector2(left,257),265,1-rifle.reload_left/1.6,Color(1,0.8,0.35))
 	else:
-		text(Vector2(left,244),"SABER READY" if battle.melee_cooldown == 0 else "SABER RECOVERING",16)
+		text(Vector2(left,244),"SABER "+battle.attack.stage(),16)
 		for round_index in range(6):
 			draw_rect(Rect2(Vector2(left+round_index*30,257),Vector2(23,5)),MINT if round_index < rifle.ammo else Color(0.2,0.3,0.35))
 	text(Vector2(size.x-260-Layout.safe.z,36+Layout.safe.y),"TIME  %05.1f" % battle.elapsed,20)
@@ -72,11 +72,11 @@ func _draw() -> void:
 					var edge: Vector2 = at+corner*Vector2(34,38)
 					draw_line(edge,edge-Vector2(corner.x*12,0),MINT,2)
 					draw_line(edge,edge-Vector2(0,corner.y*12),MINT,2)
-				text(at+Vector2(-30,-44),"LOCK %d  / %dm" % [target.target_number,player.position.distance_to(target.position)],16,MINT)
+				text(at+Vector2(-30,-44),"%s / %dm" % [target.role,player.position.distance_to(target.position)],16,MINT)
 			bar(at+Vector2(-25,42),50,float(target.hp)/target.max_hp,Color(1,0.5,0.2) if target.windup>0 else MINT)
 			if target.windup > 0:
 				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else "INCOMING",16,Color(1,0.6,0.15))
-				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/0.65),24,Color(1,0.6,0.15),3)
+				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/(1.0 if target.role == "SUPPORT" else (0.55 if target.attack_kind == "melee" else 0.65))),24,Color(1,0.6,0.15),3)
 		if battle.hit_left > 0:
 			for axis in [Vector2(1,1),Vector2(-1,1)]: draw_line(center-axis*12,center+axis*12,Color.WHITE,2)
 		if pilot.touch_visible:
@@ -102,7 +102,7 @@ func _draw() -> void:
 	var y := center.y-125
 	var title := "READY TO LAUNCH" if game.mode == "ready" else ("PAUSED" if game.mode == "paused" else ("MISSION COMPLETE" if battle.won else "UNIT DOWN"))
 	text(Vector2(x,y),title,36,MINT if not battle.lost else Color(1,0.5,0.4))
-	var detail := "RX78 vs 3 Zaku  /  rifle + 3-hit saber combo"
+	var detail: String = game.arena.NAMES[game.arena.index]+" / 3 SPECIALIST ZAKU"
 	if game.mode == "result": detail = "Destroyed %d / 3   Time %.1fs   Accuracy %d%%" % [battle.kills,battle.elapsed,100*battle.hits/maxi(1,battle.shots)]
 	text(Vector2(x,y+44),detail,19)
 	if game.mode == "result" and battle.won:
@@ -111,7 +111,7 @@ func _draw() -> void:
 	if game.mode == "paused":
 		text(Vector2(x,y-35),"%d FPS / AVG %d" % [Engine.get_frames_per_second(),game.average_fps],16)
 	text(Vector2(x,y+78),"Orange warning = attack incoming. Dash or use cover.",18)
-	text(Vector2(x,y+108),"Saber: get within 3m, hold RMB / V. Hit 3 knocks back.",18)
+	text(Vector2(x,y+108),"Saber: wind up > strike > recover. Dash to evade attacks.",18)
 	text(Vector2(x,y+148),"ENTER / TAP TO "+("RETRY" if game.mode == "result" else "PLAY"),26,MINT)
 	text(Vector2(x,y+185),"BEST %.1fs" % game.best_time if game.best_time>0 else "Defeat all three to set your first record.",16)
 	var buttons := Layout.menu_buttons(size)
@@ -119,4 +119,5 @@ func _draw() -> void:
 		var rect: Rect2 = buttons[key]
 		draw_rect(rect,Color(0.15,0.27,0.36))
 		var label := ("SOUND OFF" if game.sounds.muted else "SOUND ON") if key == "mute" else ("QUALITY LOW" if game.low_quality else "QUALITY HIGH")
+		if key == "arena": label = "MAP LOCKED IN COMBAT" if game.mode == "paused" else "N / MAP: "+game.arena.NAMES[game.arena.index]
 		text(rect.position+Vector2(16,33),label,20)

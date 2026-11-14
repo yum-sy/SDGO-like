@@ -1,0 +1,29 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS swept blade crosses front target at 30 Hz
+PASS swept blade crosses front target at 60 Hz
+PASS swept blade crosses front target at 120 Hz
+PASS frame skip cannot tunnel over active arc
+PASS blade never hits behind committed facing
+PASS vertical separation rejects melee
+PASS arena 0 supplies a route around cover
+PASS arena 0 route avoids expanded collision footprints
+PASS arena 1 supplies a route around cover
+PASS arena 1 route avoids expanded collision footprints
+PASS input starts windup without immediate damage
+PASS windup remains non-damaging
+PASS damage occurs as blade crosses target
+PASS visual blade reads the same authoritative clock
+PASS one swing cannot damage same target twice
+PASS late recovery input buffers next combo
+PASS incoming damage interrupts swing and restores movement
+PASS moving out before strike avoids committed attack
+PASS new obstacle during windup blocks actual strike
+PASS encounter assigns three distinct tactical roles
+PASS support holds elevated firing position
+PASS manual target switch acquires visible rear enemy and requests camera turn
+PASS rifle cannot fire backward during camera acquisition
+PASS manual camera acquisition converges smoothly
+PASS manual mouse movement cancels assisted camera turn
+PASS cancelling camera assist also releases offscreen lock
+FAILURES 0

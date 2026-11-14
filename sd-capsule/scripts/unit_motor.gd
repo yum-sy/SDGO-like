@@ -7,6 +7,8 @@ var booster: float:
 	set(value): state.booster = value
 var hp: int:
 	get: return state.hp
+var focus_yaw := NAN
+var attack_slow := 1.0
 var yaw := 0.0
 var pitch := -0.22
 var visual: Node3D
@@ -31,6 +33,10 @@ func simulate(command: Dictionary, delta: float) -> void:
 	state.tick(delta)
 	if hp <= 0:
 		return
+	if command.look.length() > 0: focus_yaw = NAN
+	if not is_nan(focus_yaw):
+		yaw = lerp_angle(yaw,focus_yaw,1-exp(-14*delta))
+		if absf(angle_difference(yaw,focus_yaw)) < 0.01: focus_yaw = NAN
 	yaw -= command.look.x
 	pitch = clampf(pitch - command.look.y, -0.9, 0.45)
 	var direction := Basis(Vector3.UP, yaw) * Vector3(command.move.x, 0, command.move.y)
@@ -47,7 +53,7 @@ func simulate(command: Dictionary, delta: float) -> void:
 	if booster > 25:
 		state.boost_locked = false
 	var boosting: bool = command.boost and not is_on_floor() and not state.boost_locked and booster > 0
-	var speed := 12.0 if boosting else 7.0
+	var speed := (12.0 if boosting else 7.0)*attack_slow
 	velocity.x = move_toward(velocity.x, direction.x * speed, 50 * delta)
 	velocity.z = move_toward(velocity.z, direction.z * speed, 50 * delta)
 	if is_on_floor() and command.jump:
