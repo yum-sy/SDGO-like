@@ -1,0 +1,12 @@
+.tools/
+**/.godot/
+**/dist/
+.DS_Store
+
+# Research snapshots and transient QA screenshots stay local.
+sd-capsule/evidence/*
+!sd-capsule/evidence/model-inspection.json
+!sd-capsule/evidence/demo-tests.txt
+!sd-capsule/evidence/combat-tests.txt
+__pycache__/
+*.pyc

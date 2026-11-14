@@ -1,0 +1,46 @@
+{
+  "rx78": {
+    "bytes": 590356,
+    "sha256": "8d3a7c01ee838c757de9592daba6deda3d4047f3c1f1a61bba7cf8f013deac0e",
+    "nodes": 41,
+    "meshes": 13,
+    "skins": 0,
+    "animations": 0,
+    "materials": 1,
+    "images": 0,
+    "joint_attribute_primitives": 0,
+    "weight_attribute_primitives": 0,
+    "triangle_primitives": 13,
+    "line_primitives": 0,
+    "named_parts": [
+      "armor_gun__0",
+      "armor_shield__0",
+      "rx8_body__0",
+      "rx78_hand_lengan_L__0",
+      "rx78_hand_lengan_R__0",
+      "rx78_hand_sendi_L__0",
+      "rx78_hand_L__0",
+      "rx78_hand_R__0",
+      "rx78_hand_sendi_R__0",
+      "rx78_boy_bottom__0",
+      "r78_head__0",
+      "rx78_leg_L__0",
+      "rx78_leg_R__0"
+    ]
+  },
+  "zaku": {
+    "bytes": 11073004,
+    "sha256": "bc9fb6b79e47fd9f2572dc06c03c070332f40067417598344768f13538fc0d1b",
+    "nodes": 1435,
+    "meshes": 824,
+    "skins": 0,
+    "animations": 0,
+    "materials": 32,
+    "images": 0,
+    "joint_attribute_primitives": 0,
+    "weight_attribute_primitives": 0,
+    "triangle_primitives": 785,
+    "line_primitives": 39,
+    "named_parts": []
+  }
+}

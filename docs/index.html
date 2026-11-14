@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Capsule Sortie · Demo 1</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<link rel="manifest" href="index.manifest.json">
+
+	<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#172537"></head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":9685004,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":""};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	<style>
+html,body {margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#111e2c;}
+canvas {touch-action:none;outline:none;}
+#web-tools {position:fixed;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:5px;align-items:center;font:12px system-ui;color:#bce9ed;}
+#web-tools button {border:1px solid #416274;border-radius:5px;background:#152838dd;color:#d5f5ff;padding:7px 10px;cursor:pointer;min-height:32px;}
+#web-tools button[hidden] {display:none;} #pwa-note {font-size:10px;max-width:180px;}
+#rotate-note {display:none;position:fixed;inset:0;background:#101d2cf5;z-index:30;color:#dcf9ff;align-items:center;justify-content:center;text-align:center;font:20px system-ui;padding:25px;}
+#credit-dialog {max-width:560px;background:#172b3d;color:#e1f1fb;border:1px solid #678597;border-radius:8px;font:16px/1.6 system-ui;padding:28px;}
+#credit-dialog a {color:#75ead7;}
+@media (pointer:coarse) {#mouse-lock{display:none;} #pwa-note {display:none;} #web-tools {left:max(20px,env(safe-area-inset-left));transform:none;top:auto;bottom:max(5px,env(safe-area-inset-bottom));} #web-tools button{padding:6px;font-size:11px;}}
+@media (orientation:portrait) and (pointer:coarse) {#rotate-note{display:flex;}}
+</style>
+<nav id="web-tools" aria-label="게임 도구">
+<button id="fullscreen">전체화면</button><button id="mouse-lock">마우스 잠금</button>
+<button id="install" hidden>앱 설치</button><button id="update" hidden>업데이트 적용</button><button id="credits">출처</button>
+<span id="pwa-note" role="status">오프라인 준비 중…</span>
+</nav>
+<div id="rotate-note">기기를 가로로 돌려 주세요.<br>화면 전체에서 이동·공격·시점을 동시에 조작합니다.</div>
+<dialog id="credit-dialog"><h2>Capsule Sortie · Fan Demo</h2>
+<p>원작 SD건담 캡슐파이터에서 영감을 받은 비공식 팬 데모입니다.</p>
+<p><a href="https://sketchfab.com/3d-models/rx78-1af4f3cb6a2b4bbea488421d2da1aca3" target="_blank" rel="noopener">Rx78 — nickqd</a><br>
+<a href="https://sketchfab.com/3d-models/sd-ms-06f-zaku-ii-bbf1b12464cd4c158e3da1bdd13c5ce5" target="_blank" rel="noopener">SD MS-06F Zaku II — krit yamsaso</a><br>
+<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · 크기/방향 보정, 메쉬 병합/LOD, 강체 부품 애니메이션 적용.</p>
+<p><a href="https://kenney.nl/assets/sci-fi-sounds" target="_blank" rel="noopener">Sci-fi Sounds</a> · <a href="https://kenney.nl/assets/blaster-kit" target="_blank" rel="noopener">Blaster Kit</a> — Kenney, CC0.</p>
+<p>WASD 이동 · Space 점프/공중 부스터 · Shift 대시<br>좌클릭/F 사격 · 우클릭/V 사벨 · R 재장전<br>Tab 표적 · Q/E 무장 · Esc 일시정지 · L 저사양 · M 음소거<br>터치: 왼쪽 이동, 오른쪽 버튼, 나머지 영역 시점 드래그.</p><button id="close-credits">닫기</button></dialog>
+<script defer src="app.js"></script>
+</body>
+</html>

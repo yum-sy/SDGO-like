@@ -1,0 +1,23 @@
+Rx78 by nickqd
+https://sketchfab.com/3d-models/rx78-1af4f3cb6a2b4bbea488421d2da1aca3
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+Downloaded GLB on 2026-11-14. Original upload format: FBX.
+Modifications: baked transforms, centered, height normalized to 2.1 game units,
+rotated to face game forward. Separate meshes preserved. No textures supplied.
+
+SD MS-06F Zaku II by krit yamsaso (กฤษณ์ แย้มสระโส)
+https://sketchfab.com/3d-models/sd-ms-06f-zaku-ii-bbf1b12464cd4c158e3da1bdd13c5ce5
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+Downloaded GLB on 2026-11-14. Original upload format: DAE.
+Modifications: baked transforms, centered, height normalized to 2.1 game units,
+triangle meshes batched by material, SketchUp line primitives omitted.
+No skeletal rig or animation added. Original files retained in assets/models.
+
+Kenney Sci-fi Sounds (laserLarge_000, laserSmall_000, forceField_000, impactMetal_000, explosionCrunch_000)
+https://kenney.nl/assets/sci-fi-sounds
+Kenney Blaster Kit 2.1 (crate-medium)
+https://kenney.nl/assets/blaster-kit
+CC0 https://creativecommons.org/publicdomain/zero/1.0/
+Downloaded 2026-11-14, source license texts under assets/audio and assets/props.
+
+Additional modifications to models: generated automatic mesh LODs; RX78 runtime rigid-part pivots and procedural walk/saber animation (not skeletal skinning).

@@ -1,0 +1,72 @@
+extends CharacterBody3D
+signal hit
+const State = preload("res://scripts/unit_state.gd")
+var state := State.new()
+var booster: float:
+	get: return state.booster
+	set(value): state.booster = value
+var hp: int:
+	get: return state.hp
+var yaw := 0.0
+var pitch := -0.22
+var visual: Node3D
+var impulse := Vector3.ZERO
+var dash_left := 0.0
+var dash_cooldown := 0.0
+var dash_direction := Vector3.ZERO
+var dash_was_held := false
+var animation_time := 0.0
+var rig: Node3D
+var grounded := false
+
+func aim_point() -> Vector3:
+	return global_position + Vector3.UP * 1.1
+func damage(amount: int) -> void:
+	if state.damage(amount):
+		hit.emit()
+func simulate(command: Dictionary, delta: float) -> void:
+	state.tick(delta)
+	if hp <= 0:
+		return
+	yaw -= command.look.x
+	pitch = clampf(pitch - command.look.y, -0.9, 0.45)
+	var direction := Basis(Vector3.UP, yaw) * Vector3(command.move.x, 0, command.move.y)
+	dash_cooldown = maxf(0,dash_cooldown-delta)
+	dash_left = maxf(0,dash_left-delta)
+	if command.dash and not dash_was_held and dash_cooldown == 0 and booster >= 22:
+		dash_direction = direction if direction.length() > 0.1 else -Basis(Vector3.UP,yaw).z
+		dash_left = 0.18
+		dash_cooldown = 0.55
+		booster -= 22
+	dash_was_held = command.dash
+	if booster < 1:
+		state.boost_locked = true
+	if booster > 25:
+		state.boost_locked = false
+	var boosting: bool = command.boost and not is_on_floor() and not state.boost_locked and booster > 0
+	var speed := 12.0 if boosting else 7.0
+	velocity.x = move_toward(velocity.x, direction.x * speed, 50 * delta)
+	velocity.z = move_toward(velocity.z, direction.z * speed, 50 * delta)
+	if is_on_floor() and command.jump:
+		velocity.y = 9
+	elif boosting:
+		velocity.y = move_toward(velocity.y, 3.5, 25 * delta)
+	else:
+		velocity.y -= 24 * delta
+	if dash_left > 0:
+		velocity.x = dash_direction.x * 24
+		velocity.z = dash_direction.z * 24
+	velocity += impulse
+	impulse = Vector3.ZERO
+	booster = clampf(booster + (-36.0 if boosting else 20.0) * delta, 0, 100)
+	move_and_slide()
+	grounded = is_on_floor()
+	if direction.length() > 0.1:
+		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 16 * delta)
+	animation_time += delta * 9
+	if is_instance_valid(rig):
+		rig.animate(velocity,grounded,animation_time,delta)
+	if position.y < -12:
+		position = Vector3(0,2,5)
+		velocity = Vector3.ZERO
+		damage(20)

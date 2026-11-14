@@ -1,0 +1,17 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS close target acquired for melee
+PASS three-hit saber combo defeats 100HP target
+PASS finisher applies knockback
+PASS rigid-part joints prepared
+PASS damage invulnerability prevents simultaneous stacking
+PASS directional dash consumes boost
+PASS depleted boost locks until recharge
+PASS boost unlocks after threshold
+PASS move + fire + camera multi-touch coexist
+PASS releasing fire preserves joystick
+PASS focus/pause clears touch ownership
+PASS AI chases player using physics
+PASS AI enters evade after hit
+PASS zero player HP produces defeat
+FAILURES 0

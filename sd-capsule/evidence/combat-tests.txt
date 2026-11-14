@@ -1,0 +1,16 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS visible target acquired
+PASS Tab cycles eligible targets
+PASS ray hits target and consumes one round
+PASS cooldown prevents duplicate shot
+PASS reload blocks fire
+PASS manual reload restores magazine
+PASS wall prevents target lock
+PASS wall absorbs shot without damaging target
+PASS targets outside range rejected
+PASS empty magazine auto reloads
+PASS three targets defeated and victory reached
+PASS dead target cannot count twice
+PASS victory blocks further firing
+FAILURES 0

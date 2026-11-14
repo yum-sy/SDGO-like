@@ -1,0 +1,26 @@
+<style>
+html,body {margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#111e2c;}
+canvas {touch-action:none;outline:none;}
+#web-tools {position:fixed;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:5px;align-items:center;font:12px system-ui;color:#bce9ed;}
+#web-tools button {border:1px solid #416274;border-radius:5px;background:#152838dd;color:#d5f5ff;padding:7px 10px;cursor:pointer;min-height:32px;}
+#web-tools button[hidden] {display:none;} #pwa-note {font-size:10px;max-width:180px;}
+#rotate-note {display:none;position:fixed;inset:0;background:#101d2cf5;z-index:30;color:#dcf9ff;align-items:center;justify-content:center;text-align:center;font:20px system-ui;padding:25px;}
+#credit-dialog {max-width:560px;background:#172b3d;color:#e1f1fb;border:1px solid #678597;border-radius:8px;font:16px/1.6 system-ui;padding:28px;}
+#credit-dialog a {color:#75ead7;}
+@media (pointer:coarse) {#mouse-lock{display:none;} #pwa-note {display:none;} #web-tools {left:max(20px,env(safe-area-inset-left));transform:none;top:auto;bottom:max(5px,env(safe-area-inset-bottom));} #web-tools button{padding:6px;font-size:11px;}}
+@media (orientation:portrait) and (pointer:coarse) {#rotate-note{display:flex;}}
+</style>
+<nav id="web-tools" aria-label="게임 도구">
+<button id="fullscreen">전체화면</button><button id="mouse-lock">마우스 잠금</button>
+<button id="install" hidden>앱 설치</button><button id="update" hidden>업데이트 적용</button><button id="credits">출처</button>
+<span id="pwa-note" role="status">오프라인 준비 중…</span>
+</nav>
+<div id="rotate-note">기기를 가로로 돌려 주세요.<br>화면 전체에서 이동·공격·시점을 동시에 조작합니다.</div>
+<dialog id="credit-dialog"><h2>Capsule Sortie · Fan Demo</h2>
+<p>원작 SD건담 캡슐파이터에서 영감을 받은 비공식 팬 데모입니다.</p>
+<p><a href="https://sketchfab.com/3d-models/rx78-1af4f3cb6a2b4bbea488421d2da1aca3" target="_blank" rel="noopener">Rx78 — nickqd</a><br>
+<a href="https://sketchfab.com/3d-models/sd-ms-06f-zaku-ii-bbf1b12464cd4c158e3da1bdd13c5ce5" target="_blank" rel="noopener">SD MS-06F Zaku II — krit yamsaso</a><br>
+<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> · 크기/방향 보정, 메쉬 병합/LOD, 강체 부품 애니메이션 적용.</p>
+<p><a href="https://kenney.nl/assets/sci-fi-sounds" target="_blank" rel="noopener">Sci-fi Sounds</a> · <a href="https://kenney.nl/assets/blaster-kit" target="_blank" rel="noopener">Blaster Kit</a> — Kenney, CC0.</p>
+<p>WASD 이동 · Space 점프/공중 부스터 · Shift 대시<br>좌클릭/F 사격 · 우클릭/V 사벨 · R 재장전<br>Tab 표적 · Q/E 무장 · Esc 일시정지 · L 저사양 · M 음소거<br>터치: 왼쪽 이동, 오른쪽 버튼, 나머지 영역 시점 드래그.</p><button id="close-credits">닫기</button></dialog>
+<script defer src="app.js"></script>
