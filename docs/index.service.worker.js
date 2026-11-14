@@ -1,5 +1,5 @@
-const CACHE="capsule-860c82c3a8e87995";
-const FILES=[".nojekyll", "CREDITS.txt", "app.js", "index.144x144.png", "index.144x144.png.import", "index.180x180.png", "index.180x180.png.import", "index.512x512.png", "index.512x512.png.import", "index.apple-touch-icon.png", "index.apple-touch-icon.png.import", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.icon.png.import", "index.js", "index.manifest.json", "index.offline.html", "index.pck", "index.png", "index.png.import", "index.wasm"];
+const CACHE="capsule-47fded8efd965541";
+const FILES=["CREDITS.txt", "app.js", "index.144x144.png", "index.180x180.png", "index.192x192.png", "index.512x512.png", "index.apple-touch-icon.png", "index.audio.position.worklet.js", "index.audio.worklet.js", "index.html", "index.icon.png", "index.js", "index.manifest.json", "index.offline.html", "index.pck", "index.png", "index.wasm"];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES))));
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('capsule-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));
 self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting();});

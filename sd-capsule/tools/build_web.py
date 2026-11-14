@@ -7,6 +7,8 @@ parser.add_argument('--godot', default=os.environ.get('GODOT_BIN', str(root.pare
 args = parser.parse_args()
 dist = root / 'dist'
 dist.mkdir(exist_ok=True)
+(dist/'.gdignore').touch()
+for old in dist.glob('*.import'): old.unlink()
 subprocess.run([args.godot,'--headless','--path',str(root),'--export-release','Web'],check=True)
 html = (dist/'index.html').read_text()
 html = html.replace('"serviceWorker":"index.service.worker.js"','"serviceWorker":""')
@@ -27,13 +29,14 @@ def icon(size):
             pixels.extend((80,235,202) if accent else (23,37,55))
     def chunk(t,d):return struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
     return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',size,size,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(bytes(pixels)))+chunk(b'IEND',b'')
-for size in (144,180,512): (dist/f'index.{size}x{size}.png').write_bytes(icon(size))
+for size in (144,180,192,512): (dist/f'index.{size}x{size}.png').write_bytes(icon(size))
 (dist/'index.apple-touch-icon.png').write_bytes(icon(180))
 (dist/'index.icon.png').write_bytes(icon(144))
 manifest=json.loads((dist/'index.manifest.json').read_text())
+manifest['icons']=[{'src':'index.192x192.png','sizes':'192x192','type':'image/png','purpose':'any'},{'src':'index.512x512.png','sizes':'512x512','type':'image/png','purpose':'any maskable'}]
 manifest.update(name='Capsule Sortie',short_name='Capsule',id='./',scope='./',start_url='./index.html',description='RX78 vs Zaku · 3D action fan demo',theme_color='#172537')
 (dist/'index.manifest.json').write_text(json.dumps(manifest))
-assets=sorted(p.name for p in dist.iterdir() if p.is_file() and p.name not in ('index.service.worker.js','.DS_Store'))
+assets=sorted(p.name for p in dist.iterdir() if p.is_file() and p.name not in ('index.service.worker.js','.DS_Store','.gdignore','.nojekyll'))
 hash_value=hashlib.sha256(b''.join((dist/n).read_bytes() for n in assets)).hexdigest()[:16]
 worker='''const CACHE="capsule-__VERSION__";
 const FILES=__FILES__;
