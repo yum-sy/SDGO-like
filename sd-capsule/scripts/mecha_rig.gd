@@ -1,6 +1,8 @@
 extends Node3D
 # Rigid-part animation, not skinning. Original source geometry stays intact.
 var joints := {}
+var joint_rest := {}
+var attack_weight := 0.0
 var weapon: MeshInstance3D
 var saber: MeshInstance3D
 var down := false
@@ -47,6 +49,7 @@ func _ready() -> void:
 			part.reparent(joint)
 			part.position = -pivot_at
 			joints[name_text] = joint
+			joint_rest[name_text] = pivot_at
 			if "armor_gun" in name_text:
 				weapon = part
 				gun_side = limb_side
@@ -98,6 +101,11 @@ func set_attack_pose(clock: RefCounted) -> void:
 	attack_stage = clock.stage()
 	attack_angle = clock.pose_angle()
 	swing_left = 1.0 if clock.running else 0.0
+	attack_weight = 0.0
+	if clock.running:
+		var clip: Vector3 = clock.clip()
+		attack_weight = smoothstep(0,1,clock.elapsed/clip.x) if attack_stage == "WINDUP" else 1.0
+		if attack_stage == "RECOVERY": attack_weight = 1-smoothstep(0,1,(clock.elapsed-clip.x-clip.y)/clip.z)
 	apply_blade_pose()
 func apply_blade_pose() -> void:
 	saber.visible = swing_left > 0 or saber_equipped
@@ -122,7 +130,7 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	var local_motion := global_basis.inverse()*velocity
 	var slash_bank := sin(attack_angle)*0.12 if swing_left > 0 else 0.0
 	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08+slash_bank,blend)
-	position.y = -landing*0.12 + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
+	position.y = -landing*0.12 - attack_weight*(0.08 if swing_index == 3 else 0.035) + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
 	for flame in thrusters:
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
@@ -137,20 +145,33 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			var leg_pose := angle*forward_weight if grounded else -0.25
 			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65,blend)
 			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
+			leg_pose += attack_weight*side*(0.24 if swing_index == 3 else 0.12)
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
-			var arm_pose := -angle * 0.4 - recoil*0.25 - sin(reload_progress*PI)*0.65
-			arm_pose -= evade_weight*0.25
-			joint.rotation.y = lerp_angle(joint.rotation.y,0,blend)
-			if joint_sides[key] == gun_side and reload_progress == 0 and swing_left == 0:
+			var firing_arm: bool = joint_sides[key] == gun_side
+			var arm_pose := -angle*0.4-sin(reload_progress*PI)*0.65-evade_weight*0.25
+			var yaw_pose := 0.0
+			var roll_pose := 0.0
+			joint.position = joint_rest[key]
+			if swing_left > 0:
+				if firing_arm:
+					arm_pose = lerpf(arm_pose,-0.9-(0.18 if swing_index == 3 else 0.0),attack_weight)
+					yaw_pose = attack_angle*0.75*attack_weight
+					roll_pose = -0.2*attack_weight
+				else:
+					# Shield arm counterbalances the blade and braces the heavy finisher.
+					arm_pose -= attack_weight*0.55
+					yaw_pose = -attack_angle*0.16*attack_weight
+			elif firing_arm and reload_progress == 0:
 				arm_pose -= (0.95+aim_pitch)*minf(1,aim_left*8)
+				arm_pose -= recoil*0.18
+				joint.position += Vector3(0,recoil*0.025,-recoil*0.09)
+			elif aim_left > 0 and reload_progress == 0:
+				arm_pose -= minf(1,aim_left*8)*0.25
 			joint.rotation.x = lerpf(joint.rotation.x,arm_pose,blend)
+			joint.rotation.y = lerp_angle(joint.rotation.y,yaw_pose,blend)
+			joint.rotation.z = lerp_angle(joint.rotation.z,roll_pose,blend)
 	apply_blade_pose()
-	if swing_left > 0:
-		for key in joints:
-			if ("hand_" in key or "armor_" in key) and joint_sides[key] == gun_side:
-				joints[key].rotation.x = lerpf(joints[key].rotation.x,-0.8,blend)
-				joints[key].rotation.y = lerp_angle(joints[key].rotation.y,attack_angle*0.55,blend)
 
 func die() -> void:
 	down = true

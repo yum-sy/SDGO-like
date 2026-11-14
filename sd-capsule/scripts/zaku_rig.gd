@@ -35,6 +35,10 @@ func apply_strike_pose() -> void:
 		# Preparation draws the fist back; contact extends it along the attack clock.
 		joints.arm_R.rotation.x = lerpf(0.5,-1.45,strike_phase)
 		joints.arm_R.rotation.y = lerpf(-0.35,0.15,strike_phase)
+		joints.torso.rotation.y = lerpf(-0.22,0.18,strike_phase)
+		joints.arm_L.rotation.x = -0.55
+		joints.leg_L.rotation.x = -0.15
+		joints.leg_R.rotation.x = 0.18
 func die() -> void:
 	dying = true
 	death_time = 0
@@ -63,6 +67,7 @@ func animate(velocity: Vector3, windup: float, evade: bool, delta: float) -> voi
 	joints.arm_L.rotation.x = lerpf(joints.arm_L.rotation.x,-wave*0.45+guard+recoil*0.3,blend)
 	joints.arm_R.rotation.x = lerpf(joints.arm_R.rotation.x,wave*0.45+guard+recoil*0.3,blend)
 	joints.arm_R.rotation.y = lerp_angle(joints.arm_R.rotation.y,0,blend)
+	if strike_phase < 0: joints.torso.rotation.y = lerp_angle(joints.torso.rotation.y,0,blend)
 	apply_strike_pose()
 	joints.head.rotation.y = sin(phase*0.17)*0.06*(1-aim_weight)
 	joints.torso.rotation.x = lerpf(joints.torso.rotation.x,-hurt*0.24+recoil*0.12,blend)

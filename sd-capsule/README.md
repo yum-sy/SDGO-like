@@ -1,4 +1,4 @@
-# Capsule Sortie — Duel Update
+# Capsule Sortie — Attack Motion Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -190,3 +190,10 @@ Gundam preserves its active rifle facing while strafing, returns to movement-fac
 Assault circles at close range during cooldown. Flanker retreats below 6m and resumes flanking above 9m, periodically changes orbit direction, and seeks a closer angle after blocked sight. Support checks real line of sight every 0.2s and shifts within 1.6m of its spawn on the firing deck after 0.8s obstruction. Retreat destinations also stay within the deck. Evasion cannot initiate a new attack. No input-reading or instant aim prediction added. Existing windups, damage and enemy HP remain unchanged.
 
 Validation: 132 headless checks and PWA verification passed; clean Web export. Browser tests covered pursuit saber finishing, simultaneous strafe/fire, defeat/retry, and wins on Cargo Yard (36.5s/HP84) and Reactor Ring (10.6s/HP84). No console warnings/errors. Physical mobile performance remains unverified.
+
+
+## Attack Motion Update - 2026-11-15
+
+Removed competing double interpolation on Gundam saber shoulders. A clock-driven attack envelope now blends a stronger sword arm pose, shield counterbalance, planted legs and a deeper third-hit brace, returning smoothly to neutral in recovery. Rifle recoil offsets the arm and weapon from their shared original shoulder pivot and restores them afterward. Zaku punches now include torso twist, guarding arm and planted legs. Blade sweep, damage windows and damage values are unchanged.
+
+Validation: 138 headless checks including six attack-motion checks; PWA verification and clean web export. Browser verified close combat, enemy punch pose, saber-to-rifle transition and enemy damage/destruction with no console errors/warnings. Existing rigid-part model limitations remain; no new skeletal assets were introduced.
