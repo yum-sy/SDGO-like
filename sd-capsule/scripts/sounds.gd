@@ -8,6 +8,7 @@ const EFFECTS = {
 	"shot":preload("res://assets/audio/laserLarge_000.ogg"),
 	"enemy":preload("res://assets/audio/laserSmall_000.ogg"),
 	"saber":preload("res://assets/audio/forceField_000.ogg"),
+	"heavy_hit":preload("res://assets/audio/impactMetal_000.ogg"),
 	"hit":preload("res://assets/audio/impactMetal_000.ogg"),
 	"destroy":preload("res://assets/audio/explosionCrunch_000.ogg")}
 func _ready() -> void:
@@ -22,6 +23,7 @@ func play_effect(kind: String) -> void:
 	var voice := pool[cursor]
 	cursor = (cursor+1)%pool.size()
 	voice.pitch_scale = 1.6 if kind == "reload" else (1.25 if kind == "ready" else 1.0)
+	if kind == "heavy_hit": voice.pitch_scale = 0.7
 	voice.volume_db = -18 if kind in ["reload","ready"] else -12
 	voice.stream = EFFECTS[kind]
 	voice.play()

@@ -1,4 +1,4 @@
-# Capsule Sortie — Mission Update
+# Capsule Sortie — Motion Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -154,3 +154,12 @@ Tactical Update 브라우저 검증: CARGO YARD 사벨 격파 + 엄폐 우회 + 
 3. 피격·패배/승리 후 재시작, 앱 전환 후 일시정지 유지
 4. 홈 화면 설치 → 앱 종료 → 비행기 모드에서 재실행
 5. 저사양/기본 설정으로 5분 전투, FPS/발열/입력 누락 기록
+
+
+## Motion Update — 2026-11-15
+
+Gundam locomotion, aiming, reload and evade poses now blend exponentially. Directional banking and tucked legs recover smoothly after boosting. Zaku uses a shooting stance, blended recoil, drawn-back melee preparation and clock-driven extension, plus a lowered sidestep stance. These remain rigid-part animations, not newly skinned models.
+
+Saber ribbons use the authoritative attack clock's swept angles, capped at 12 nodes with a 0.14s lifetime. Hits and destruction emit expanding shock rings; the third combo hit has a larger effect and lower-pitched impact. Damage, attack intervals and invulnerability rules are unchanged.
+
+Validation: 90 existing checks plus 8 motion checks, PWA checks and web export. Recoil regression now compares against the prepared aiming pose. Browser combat used saber finishing, rifle/reload and directional dash to win with 3 kills in 21.9s, HP80 and the saber medal. No browser errors/warnings. Physical mobile performance remains unverified.

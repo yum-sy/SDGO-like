@@ -21,9 +21,11 @@ func run() -> void:
 	check(mesh_count == 58,"all 58 Zaku material-region meshes attached once")
 	rig.animate(Vector3(3,0,0),0,false,0.1)
 	check(absf(rig.joints.leg_L.rotation.x) > 0.1 and is_equal_approx(rig.joints.leg_L.rotation.x,-rig.joints.leg_R.rotation.x),"moving Zaku alternates legs")
+	for i in range(30): rig.animate(Vector3.ZERO,1,false,0.016)
+	var aimed_arm: float = rig.joints.arm_L.rotation.x
 	rig.fire()
 	rig.animate(Vector3.ZERO,0,false,0.016)
-	check(rig.recoil > 0 and rig.joints.arm_L.rotation.x > 0,"Zaku shot drives arm recoil")
+	check(rig.recoil > 0 and rig.joints.arm_L.rotation.x > aimed_arm,"Zaku shot drives arm recoil")
 	enemy.damage(25)
 	check(rig.hurt > 0 and enemy.windup == 0,"damage interrupts attack and triggers visual stagger")
 	var pilot_rig = scene.unit.rig

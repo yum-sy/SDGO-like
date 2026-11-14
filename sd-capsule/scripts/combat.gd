@@ -178,6 +178,7 @@ func advance_melee(delta: float) -> void:
 	player.attack_slow = 0.55 if attack.stage() == "WINDUP" else 0.35
 	player.rig.set_attack_pose(attack)
 	if strike:
+		preload("res://scripts/saber_trail.gd").spawn(self,player.aim_point(),attack_facing,attack)
 		if attack.previous < attack.CLIPS[combo-1].x:
 			sound("saber")
 			player.impulse = attack_facing*3
@@ -194,7 +195,7 @@ func advance_melee(delta: float) -> void:
 				impact(target.aim_point(),amount,Color(1,0.25,0.6))
 				camera_trauma = 0.35 if combo == 3 else 0.16
 				hit_left = 0.18
-				sound("hit")
+				sound("heavy_hit" if combo == 3 else "hit")
 	attack.finish_tick()
 	if not attack.running:
 		player.attack_slow = 1.0
@@ -252,7 +253,7 @@ func beam(from: Vector3, to: Vector3) -> void:
 	get_tree().create_timer(0.09).timeout.connect(tracer.queue_free)
 
 func impact(point: Vector3, amount: int, tint: Color) -> void:
-	FX.spawn(self,point,tint)
+	FX.spawn(self,point,tint,1.35 if amount >= 45 else 1.0)
 	damage_popups.append({"point":point,"amount":amount,"life":0.65,"tint":tint})
 	if damage_popups.size() > 12: damage_popups.pop_front()
 func announce(text: String) -> void:

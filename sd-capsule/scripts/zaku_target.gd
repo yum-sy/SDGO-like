@@ -114,7 +114,8 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	var toward := player.global_position-global_position
 	if melee_clock.running: toward = melee_facing
 	model.rotation.y = lerp_angle(model.rotation.y,atan2(toward.x,toward.z),8*delta)
-	model.animate(velocity,windup,brain.dodge_left > 0,delta)
+	model.melee_windup = melee_clock.running
+	model.animate(velocity,windup,brain.dodge_left > 0 and stun == 0,delta)
 	if melee_clock.running:
 		var active := melee_clock.advance(delta)
 		windup = maxf(0,0.55-melee_clock.elapsed)

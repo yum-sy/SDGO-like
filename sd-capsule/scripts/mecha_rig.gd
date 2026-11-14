@@ -9,6 +9,7 @@ var joint_sides := {}
 var aim_left := 0.0
 var aim_pitch := 0.0
 var gun_side := "R"
+var evade_weight := 0.0
 var recoil := 0.0
 var hurt := 0.0
 var landing := 0.0
@@ -115,7 +116,10 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	hurt = move_toward(hurt,0,delta*5)
 	landing = move_toward(landing,0,delta*6)
 	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else 0.0)+hurt*0.16,delta*12)
-	rotation.z = sin(time*1.6)*hurt*0.08
+	var blend := 1-exp(-16*delta)
+	evade_weight = lerpf(evade_weight,1.0 if boost_active else 0.0,blend)
+	var local_motion := global_basis.inverse()*velocity
+	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08,blend)
 	position.y = -landing*0.12
 	for flame in thrusters:
 		flame.visible = boost_active
@@ -126,18 +130,22 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 		var side := 1.0 if joint_sides[key] == "L" else -1.0
 		var angle := sin(time) * stride * side
 		if "leg_" in key:
-			joint.rotation.x = angle if grounded else -0.25
+			var leg_pose := angle if grounded else -0.25
+			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
+			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
-			joint.rotation.x = -angle * 0.4 - recoil*0.25 - sin(reload_progress*PI)*0.65
-			joint.rotation.y = 0
+			var arm_pose := -angle * 0.4 - recoil*0.25 - sin(reload_progress*PI)*0.65
+			arm_pose -= evade_weight*0.25
+			joint.rotation.y = lerp_angle(joint.rotation.y,0,blend)
 			if joint_sides[key] == gun_side and reload_progress == 0 and swing_left == 0:
-				joint.rotation.x -= (0.95+aim_pitch)*minf(1,aim_left*8)
+				arm_pose -= (0.95+aim_pitch)*minf(1,aim_left*8)
+			joint.rotation.x = lerpf(joint.rotation.x,arm_pose,blend)
 	apply_blade_pose()
 	if swing_left > 0:
 		for key in joints:
 			if ("hand_" in key or "armor_" in key) and joint_sides[key] == gun_side:
-				joints[key].rotation.x = -0.8
-				joints[key].rotation.y = attack_angle*0.55
+				joints[key].rotation.x = lerpf(joints[key].rotation.x,-0.8,blend)
+				joints[key].rotation.y = lerp_angle(joints[key].rotation.y,attack_angle*0.55,blend)
 		rotation.z += sin(attack_angle)*0.12
 
 func die() -> void:

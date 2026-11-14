@@ -3,6 +3,7 @@ extends Node3D
 var age := 0.0
 var lifetime := 0.5
 var fragments: Array[Dictionary] = []
+var shockwave: MeshInstance3D
 var ring: MeshInstance3D
 static func spawn(parent: Node, at: Vector3, tint: Color, intensity: float = 1.0) -> Node3D:
 	# Bound effect count even under sustained fire.
@@ -38,6 +39,18 @@ func setup(tint: Color, intensity: float) -> void:
 	ring.mesh = sphere
 	ring.material_override = material(Color(1,0.95,0.7))
 	add_child(ring)
+	if intensity >= 1:
+		shockwave = MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.38
+		torus.outer_radius = 0.43
+		torus.rings = 16
+		torus.ring_segments = 6
+		shockwave.mesh = torus
+		var glow := material(tint)
+		glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		shockwave.material_override = glow
+		add_child(shockwave)
 func _process(delta: float) -> void:
 	var scene := get_tree().current_scene
 	if is_instance_valid(scene) and scene.get("mode") == "paused": return
@@ -48,4 +61,7 @@ func _process(delta: float) -> void:
 		fragment.mesh.position += fragment.velocity*delta
 		fragment.mesh.scale = Vector3.ONE*fade
 	ring.scale = Vector3.ONE*maxf(0,1-age/0.16)*3
+	if is_instance_valid(shockwave):
+		shockwave.scale = Vector3.ONE*(0.3+age*6)
+		shockwave.material_override.albedo_color.a = fade*0.7
 	if age >= lifetime: queue_free()
