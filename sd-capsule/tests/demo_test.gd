@@ -24,6 +24,8 @@ func run() -> void:
 	await physics_frame
 	await physics_frame
 	scene.set_physics_process(false)
+	# Fixed 100HP fixture isolates weapon arithmetic from encounter tuning.
+	for enemy in scene.combat.targets: enemy.hp = 100
 	var battle = scene.combat
 	battle.ai_enabled = false
 	var player = scene.unit

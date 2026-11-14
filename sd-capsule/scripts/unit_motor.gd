@@ -24,6 +24,9 @@ func aim_point() -> Vector3:
 func damage(amount: int) -> void:
 	if state.damage(amount):
 		hit.emit()
+		if is_instance_valid(rig):
+			rig.hit()
+			if hp <= 0: rig.die()
 func simulate(command: Dictionary, delta: float) -> void:
 	state.tick(delta)
 	if hp <= 0:
@@ -59,12 +62,18 @@ func simulate(command: Dictionary, delta: float) -> void:
 	velocity += impulse
 	impulse = Vector3.ZERO
 	booster = clampf(booster + (-36.0 if boosting else 20.0) * delta, 0, 100)
+	var was_grounded := grounded
+	var falling_speed := velocity.y
 	move_and_slide()
+	if is_on_floor() and not was_grounded and falling_speed < -4 and is_instance_valid(rig):
+		rig.land()
+		preload("res://scripts/combat_fx.gd").spawn(get_parent(),global_position+Vector3.UP*0.1,Color(0.5,0.7,0.8),0.6)
 	grounded = is_on_floor()
 	if direction.length() > 0.1:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 16 * delta)
 	animation_time += delta * 9
 	if is_instance_valid(rig):
+		rig.boost_active = boosting or dash_left > 0
 		rig.animate(velocity,grounded,animation_time,delta)
 	if position.y < -12:
 		position = Vector3(0,2,5)

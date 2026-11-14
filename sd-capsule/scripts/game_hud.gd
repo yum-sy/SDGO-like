@@ -19,27 +19,46 @@ func _draw() -> void:
 	var center := size*0.5
 	var left := 44.0+Layout.safe.x
 	draw_rect(Rect2(Vector2(left-20,22+Layout.safe.y),Vector2(310,160)),Color(0.02,0.06,0.1,0.72))
-	text(Vector2(left,48),"CAPSULE // SORTIE 01",18,MINT)
+	text(Vector2(left,48),"RX-78 // COMBAT TRIAL",18,MINT)
 	text(Vector2(left,78),"HP %03d    ZAKU %d / 3" % [player.hp,battle.kills],22)
 	bar(Vector2(left,89),265,player.hp/100.0,Color(0.5,0.85,1))
 	text(Vector2(left,122),"BOOST %03d%s" % [player.booster,"  COOLING" if player.state.boost_locked else ""],16)
 	bar(Vector2(left,131),265,player.booster/100.0,MINT)
-	text(Vector2(left,168),"%d FPS  /  AVG %d  /  %s" % [Engine.get_frames_per_second(),game.average_fps,"LOW" if game.low_quality else "HIGH"],14)
+	text(Vector2(left,168),"THRUSTER READY" if player.booster >= 22 else "THRUSTER RECHARGING",14)
 	var rifle = battle.rifle
 	var name_text := "BEAM RIFLE" if battle.weapon == 0 else "BEAM SABER"
 	var ammo_text := "%d / 6" % rifle.ammo if battle.weapon == 0 else "COMBO %d / 3" % battle.combo
 	text(Vector2(left,215),name_text+"    "+ammo_text,24)
 	if rifle.reload_left > 0:
 		text(Vector2(left,244),"RELOADING %.1f s" % rifle.reload_left,18,Color(1,0.8,0.35))
+		bar(Vector2(left,257),265,1-rifle.reload_left/1.6,Color(1,0.8,0.35))
 	else:
-		text(Vector2(left,244),"SABER CD %.1f s" % battle.melee_cooldown,16)
+		text(Vector2(left,244),"SABER READY" if battle.melee_cooldown == 0 else "SABER RECOVERING",16)
+		for round_index in range(6):
+			draw_rect(Rect2(Vector2(left+round_index*30,257),Vector2(23,5)),MINT if round_index < rifle.ammo else Color(0.2,0.3,0.35))
 	text(Vector2(size.x-260-Layout.safe.z,36+Layout.safe.y),"TIME  %05.1f" % battle.elapsed,20)
 	text(Vector2(44,size.y-20),"Models: nickqd / krit yamsaso · CC BY 4.0     Audio & props: Kenney · CC0",12)
 	if battle.hurt_left > 0:
 		draw_rect(Rect2(Vector2.ZERO,size),Color(1,0.12,0.1,battle.hurt_left*0.4))
 	if game.mode == "playing":
+		var radar := Vector2(size.x-105-Layout.safe.z,(240 if pilot.touch_visible else 135)+Layout.safe.y)
+		draw_circle(radar,67,Color(0.025,0.07,0.1,0.72))
+		draw_arc(radar,67,0,TAU,48,Color(0.4,0.65,0.7,0.6),1)
+		draw_line(radar+Vector2(-60,0),radar+Vector2(60,0),Color(0.3,0.5,0.55,0.35))
+		draw_line(radar+Vector2(0,-60),radar+Vector2(0,60),Color(0.3,0.5,0.55,0.35))
+		draw_colored_polygon(PackedVector2Array([radar+Vector2(0,-7),radar+Vector2(-4,4),radar+Vector2(4,4)]),MINT)
+		for enemy in battle.targets:
+			if enemy.hp <= 0: continue
+			var relative: Vector3 = Basis(Vector3.UP,-player.yaw)*(enemy.position-player.position)
+			var dot_pos := Vector2(relative.x,relative.z)*1.5
+			dot_pos = dot_pos.limit_length(59)
+			draw_circle(radar+dot_pos,4,Color(1,0.55,0.25) if enemy.windup > 0 else Color(0.95,0.4,0.4))
 		draw_line(center-Vector2(6,0),center+Vector2(6,0),MINT)
 		draw_line(center-Vector2(0,6),center+Vector2(0,6),MINT)
+		for popup in battle.damage_popups:
+			if not game.camera.is_position_behind(popup.point):
+				var point: Vector2 = game.camera.unproject_position(popup.point)
+				text(point+Vector2(55,-12-(0.65-popup.life)*55),str(popup.amount),26,Color(popup.tint, minf(1,popup.life*4)))
 		for target in battle.targets:
 			if target.hp <= 0: continue
 			var point: Vector3 = target.aim_point()
@@ -49,10 +68,15 @@ func _draw() -> void:
 				text(Vector2(44 if direction.x<0 else size.x-90,size.y*0.5),"< ZAKU" if direction.x<0 else "ZAKU >",14,Color(1,0.65,0.3))
 				continue
 			if target == battle.selected:
-				draw_rect(Rect2(at-Vector2(30,34),Vector2(60,68)),MINT,false,2)
-				text(at+Vector2(-30,-44),"LOCK %d" % target.target_number,16,MINT)
-			bar(at+Vector2(-25,42),50,target.hp/100.0,Color(1,0.5,0.2) if target.windup>0 else MINT)
-			if target.windup > 0: text(at+Vector2(-16,-28),"!",26,Color(1,0.6,0.15))
+				for corner in [Vector2(-1,-1),Vector2(1,-1),Vector2(-1,1),Vector2(1,1)]:
+					var edge: Vector2 = at+corner*Vector2(34,38)
+					draw_line(edge,edge-Vector2(corner.x*12,0),MINT,2)
+					draw_line(edge,edge-Vector2(0,corner.y*12),MINT,2)
+				text(at+Vector2(-30,-44),"LOCK %d  / %dm" % [target.target_number,player.position.distance_to(target.position)],16,MINT)
+			bar(at+Vector2(-25,42),50,float(target.hp)/target.max_hp,Color(1,0.5,0.2) if target.windup>0 else MINT)
+			if target.windup > 0:
+				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else "INCOMING",16,Color(1,0.6,0.15))
+				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/0.65),24,Color(1,0.6,0.15),3)
 		if battle.hit_left > 0:
 			for axis in [Vector2(1,1),Vector2(-1,1)]: draw_line(center-axis*12,center+axis*12,Color.WHITE,2)
 		if pilot.touch_visible:
@@ -68,7 +92,7 @@ func _draw() -> void:
 				draw_rect(rect,Color(0.6,0.85,1,0.4),false,1)
 				var label: String = {"cycle":"TARGET","weapon":"SWAP"}.get(action,action.to_upper())
 				text(rect.position+Vector2(12,rect.size.y*0.5+6),label,20)
-		else:
+		elif battle.elapsed < 8:
 			text(Vector2(44,size.y-77),"WASD move   SPACE jump / boost   SHIFT dash   TAB target   Q/E weapon",16)
 			text(Vector2(44,size.y-51),"LMB / F fire   RMB / V saber   R reload   ESC pause   M sound   L quality   T touch UI",16)
 		return
@@ -81,7 +105,12 @@ func _draw() -> void:
 	var detail := "RX78 vs 3 Zaku  /  rifle + 3-hit saber combo"
 	if game.mode == "result": detail = "Destroyed %d / 3   Time %.1fs   Accuracy %d%%" % [battle.kills,battle.elapsed,100*battle.hits/maxi(1,battle.shots)]
 	text(Vector2(x,y+44),detail,19)
-	text(Vector2(x,y+78),"Enemy orange flash = shot incoming. Dash or use cover.",18)
+	if game.mode == "result" and battle.won:
+		var grade := "S" if player.hp >= 80 and battle.elapsed < 30 else ("A" if player.hp >= 50 else "B")
+		text(Vector2(x+460,y),grade,64,MINT)
+	if game.mode == "paused":
+		text(Vector2(x,y-35),"%d FPS / AVG %d" % [Engine.get_frames_per_second(),game.average_fps],16)
+	text(Vector2(x,y+78),"Orange warning = attack incoming. Dash or use cover.",18)
 	text(Vector2(x,y+108),"Saber: get within 3m, hold RMB / V. Hit 3 knocks back.",18)
 	text(Vector2(x,y+148),"ENTER / TAP TO "+("RETRY" if game.mode == "result" else "PLAY"),26,MINT)
 	text(Vector2(x,y+185),"BEST %.1fs" % game.best_time if game.best_time>0 else "Defeat all three to set your first record.",16)

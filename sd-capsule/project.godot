@@ -1,6 +1,6 @@
 config_version=5
 [application]
-config/name="Capsule Sortie · Demo 1"
+config/name="Capsule Sortie · Combat Update"
 run/main_scene="res://main.tscn"
 [display]
 window/size/viewport_width=1280

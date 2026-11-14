@@ -1,5 +1,5 @@
 extends SceneTree
-# Bake source transforms, normalize height, preserve RX parts and batch static Zaku.
+# Bake source transforms; batch Zaku by rigid articulation region AND material.
 func collect(node: Node, transform: Transform3D, result: Array) -> void:
 	if node is Node3D:
 		transform *= node.transform
@@ -34,12 +34,36 @@ func _initialize() -> void:
 				if primitive != Mesh.PRIMITIVE_TRIANGLES:
 					continue # SketchUp line overlays omitted in runtime mesh.
 				var mat: Material = instance.mesh.surface_get_material(s)
-				var key: String = str(mat.get_instance_id()) + "_" + str(primitive) if id == "zaku" else str(instance.name) + str(s)
+				if id == "rx78":
+					# Original is untextured white. Palette edits are explicit derivatives.
+					var paint := StandardMaterial3D.new()
+					paint.roughness = 0.65
+					paint.metallic = 0.15
+					paint.albedo_color = Color("cbd8df")
+					var part_name := str(instance.name)
+					if "rx8_body" in part_name: paint.albedo_color = Color("285b9a")
+					elif "shield" in part_name: paint.albedo_color = Color("c03942")
+					elif "gun" in part_name or "sendi" in part_name: paint.albedo_color = Color("344454")
+					elif "boy_bottom" in part_name: paint.albedo_color = Color("a63b47")
+					mat = paint
+				var region := ""
+				if id == "zaku":
+					var center: Vector3 = (transform * instance.get_aabb()).get_center()
+					# Source has no skin or semantic bones. Preserve complete source mesh
+					# islands and classify their centers; never cut triangles at a joint.
+					region = "torso"
+					if center.y < 0.82:
+						region = "leg_L" if center.x > 0 else "leg_R"
+					elif absf(center.x) > 0.53 and center.y < 1.72:
+						region = "arm_L" if center.x > 0 else "arm_R"
+					elif center.y > 1.47:
+						region = "head"
+				var key: String = region + "_" + str(mat.get_instance_id()) if id == "zaku" else str(instance.name) + str(s)
 				if not batches.has(key):
 					var surface := SurfaceTool.new()
 					surface.begin(primitive)
 					surface.set_material(mat)
-					batches[key] = {"surface": surface, "name": str(instance.name)}
+					batches[key] = {"surface": surface, "name": region + "_" + str(batches.size()) if id == "zaku" else str(instance.name)}
 				batches[key].surface.append_from(instance.mesh, s, transform)
 		for key in batches:
 			var instance := MeshInstance3D.new()

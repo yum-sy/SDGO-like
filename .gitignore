@@ -10,3 +10,6 @@ sd-capsule/evidence/*
 !sd-capsule/evidence/combat-tests.txt
 __pycache__/
 *.pyc
+
+!sd-capsule/evidence/polish-tests.txt
+!sd-capsule/evidence/.gdignore

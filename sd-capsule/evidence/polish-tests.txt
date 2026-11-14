@@ -1,0 +1,19 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS combat encounter uses tougher 180HP opponents
+PASS Zaku has six independently articulated regions
+PASS all 58 Zaku material-region meshes attached once
+PASS moving Zaku alternates legs
+PASS Zaku shot drives arm recoil
+PASS damage interrupts attack and triggers visual stagger
+PASS saber remains equipped between swings
+PASS boost displays both engine plumes
+PASS engine plumes stop when boost ends
+PASS close enemy telegraphs melee before dealing damage
+PASS telegraphed close attack deals damage on contact
+PASS escaping melee range avoids enemy strike
+PASS destroyed Zaku animates with collision disabled
+PASS death animation completes and removes visual
+PASS impact effects have a fixed concurrency bound
+PASS impact effects expire without accumulating nodes
+FAILURES 0

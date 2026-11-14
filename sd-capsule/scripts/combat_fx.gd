@@ -1,0 +1,51 @@
+extends Node3D
+# Short-lived geometry only; no simulation/collision/network authority.
+var age := 0.0
+var lifetime := 0.5
+var fragments: Array[Dictionary] = []
+var ring: MeshInstance3D
+static func spawn(parent: Node, at: Vector3, tint: Color, intensity: float = 1.0) -> Node3D:
+	# Bound effect count even under sustained fire.
+	if parent.get_tree().get_nodes_in_group("combat_fx").size() >= 24: return null
+	var effect: Node3D = load("res://scripts/combat_fx.gd").new()
+	parent.add_child(effect)
+	effect.global_position = at
+	effect.setup(tint,intensity)
+	return effect
+func material(tint: Color) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = tint
+	return mat
+func setup(tint: Color, intensity: float) -> void:
+	add_to_group("combat_fx")
+	lifetime = 0.35+intensity*0.16
+	var mat := material(tint)
+	for i in range(8 if intensity <= 1 else 16):
+		var shard := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.035,0.035,0.19)*intensity
+		shard.mesh = mesh
+		shard.material_override = mat
+		add_child(shard)
+		var direction := Vector3(sin(i*2.4),0.3+fmod(i*0.37,1.0),cos(i*2.4)).normalized()
+		shard.look_at_from_position(Vector3.ZERO,direction)
+		fragments.append({"mesh":shard,"velocity":direction*(2.0+fmod(i*0.73,3.0))*intensity})
+	ring = MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.12*intensity
+	sphere.height = 0.24*intensity
+	ring.mesh = sphere
+	ring.material_override = material(Color(1,0.95,0.7))
+	add_child(ring)
+func _process(delta: float) -> void:
+	var scene := get_tree().current_scene
+	if is_instance_valid(scene) and scene.get("mode") == "paused": return
+	age += delta
+	var fade := maxf(0,1-age/lifetime)
+	for fragment in fragments:
+		fragment.velocity.y -= delta*7
+		fragment.mesh.position += fragment.velocity*delta
+		fragment.mesh.scale = Vector3.ONE*fade
+	ring.scale = Vector3.ONE*maxf(0,1-age/0.16)*3
+	if age >= lifetime: queue_free()
