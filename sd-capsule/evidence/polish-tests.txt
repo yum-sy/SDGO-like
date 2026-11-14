@@ -14,6 +14,7 @@ PASS telegraphed close attack deals damage on contact
 PASS escaping melee range avoids enemy strike
 PASS destroyed Zaku animates with collision disabled
 PASS death animation completes and removes visual
+PASS impact fragments originate at impact rather than world origin
 PASS impact effects have a fixed concurrency bound
 PASS impact effects expire without accumulating nodes
 FAILURES 0

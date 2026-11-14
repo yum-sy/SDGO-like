@@ -29,7 +29,7 @@ func setup(tint: Color, intensity: float) -> void:
 		shard.material_override = mat
 		add_child(shard)
 		var direction := Vector3(sin(i*2.4),0.3+fmod(i*0.37,1.0),cos(i*2.4)).normalized()
-		shard.look_at_from_position(Vector3.ZERO,direction)
+		shard.look_at(global_position+direction)
 		fragments.append({"mesh":shard,"velocity":direction*(2.0+fmod(i*0.73,3.0))*intensity})
 	ring = MeshInstance3D.new()
 	var sphere := SphereMesh.new()

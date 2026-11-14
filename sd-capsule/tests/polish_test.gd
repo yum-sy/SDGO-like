@@ -58,6 +58,8 @@ func run() -> void:
 	rig.animate(Vector3.ZERO,0,false,0.7)
 	check(not rig.visible,"death animation completes and removes visual")
 	var fx = preload("res://scripts/combat_fx.gd")
+	var placed = fx.spawn(scene,Vector3(7,2,5),Color.WHITE)
+	check(placed.fragments.all(func(fragment): return fragment.mesh.position.is_zero_approx()),"impact fragments originate at impact rather than world origin")
 	for i in range(40): fx.spawn(scene,Vector3.ZERO,Color.WHITE)
 	check(get_nodes_in_group("combat_fx").size() <= 24,"impact effects have a fixed concurrency bound")
 	await create_timer(0.9).timeout
