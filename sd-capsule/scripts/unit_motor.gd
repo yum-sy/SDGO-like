@@ -51,6 +51,7 @@ func simulate(command: Dictionary, delta: float) -> void:
 		dash_left = 0.18
 		dash_cooldown = 0.55
 		booster -= 22
+		if is_on_floor(): preload("res://scripts/ground_fx.gd").spawn(get_parent(),global_position)
 	dash_was_held = command.dash
 	if booster < 1:
 		state.boost_locked = true
@@ -77,11 +78,11 @@ func simulate(command: Dictionary, delta: float) -> void:
 	move_and_slide()
 	if is_on_floor() and not was_grounded and falling_speed < -4 and is_instance_valid(rig):
 		rig.land()
-		preload("res://scripts/combat_fx.gd").spawn(get_parent(),global_position+Vector3.UP*0.1,Color(0.5,0.7,0.8),0.6)
+		preload("res://scripts/ground_fx.gd").spawn(get_parent(),global_position)
 	grounded = is_on_floor()
 	if direction.length() > 0.1:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 16 * delta)
-	animation_time += delta * 9
+	animation_time += delta * Vector2(velocity.x,velocity.z).length()*1.5
 	if is_instance_valid(rig):
 		rig.boost_active = boosting or dash_left > 0
 		rig.animate(velocity,grounded,animation_time,delta)

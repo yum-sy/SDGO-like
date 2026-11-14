@@ -65,7 +65,9 @@ func run() -> void:
 	check(placed.fragments.all(func(fragment): return fragment.mesh.position.is_zero_approx()),"impact fragments originate at impact rather than world origin")
 	for i in range(40): fx.spawn(scene,Vector3.ZERO,Color.WHITE)
 	check(get_nodes_in_group("combat_fx").size() <= 24,"impact effects have a fixed concurrency bound")
-	await create_timer(0.9).timeout
+	var longest := 0.0
+	for effect in get_nodes_in_group("combat_fx"): longest = maxf(longest,effect.lifetime)
+	await create_timer(longest+0.1).timeout
 	check(get_nodes_in_group("combat_fx").is_empty(),"impact effects expire without accumulating nodes")
 	scene.queue_free()
 	await create_timer(0.15).timeout

@@ -71,11 +71,20 @@ func _ready() -> void:
 		low_quality = config.get_value("settings","low_quality",false)
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
-	settings.background_mode = Environment.BG_COLOR
+	settings.background_mode = Environment.BG_SKY
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color("233d63") if arena.index == 0 else Color("172a46")
+	sky_material.sky_horizon_color = Color("c6a58e") if arena.index == 0 else Color("759aa7")
+	sky_material.ground_horizon_color = sky_material.sky_horizon_color
+	sky_material.ground_bottom_color = Color("263849")
+	var sky := Sky.new()
+	sky.sky_material = sky_material
+	settings.sky = sky
 	settings.background_color = Color("526d80")
 	settings.fog_enabled = true
-	settings.fog_light_color = Color("647f8c")
-	settings.fog_density = 0.006
+	settings.fog_light_color = Color("a99a8b") if arena.index == 0 else Color("647f8c")
+	settings.fog_sky_affect = 0.18
+	settings.fog_density = 0.003
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	settings.ambient_light_color = Color("b4d1ed")
 	settings.ambient_light_energy = 0.45
@@ -83,7 +92,8 @@ func _ready() -> void:
 	add_child(environment)
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-55,-25,0)
-	light.light_energy = 0.85
+	light.light_energy = 1.0
+	light.light_color = Color("ffe1bc") if arena.index == 0 else Color("c4e9ff")
 	light.shadow_enabled = true
 	key_light = light
 	add_child(light)
@@ -103,6 +113,9 @@ func _ready() -> void:
 	for side in [-1,1]:
 		for z in range(-25,30,10):
 			box(self,Vector3(0.08,0.18,3),Vector3(side*29.45,0.4,z),Color("5ca6b1"))
+	var dressing := preload("res://scripts/battlefield_dressing.gd").new()
+	add_child(dressing)
+	dressing.build(self,arena.index)
 	combat = preload("res://scripts/combat.gd").new()
 	add_child(combat)
 	for i in range(3):

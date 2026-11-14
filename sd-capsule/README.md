@@ -1,4 +1,4 @@
-# Capsule Sortie — Combat Readability Update
+# Capsule Sortie — Battlefield Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -172,3 +172,12 @@ Enemy melee now projects its committed 2.8m / dot>0.45 attack cone onto the grou
 Player and enemy health bars show delayed orange damage loss. The reticle responds to rifle cooldown and shows reload progress at the center; active saber attacks display the combo number. When a wall compresses the spring arm into the player, the player visual hides below 1.5m and returns above 1.9m to avoid obstructing aim and flickering. Collision and health are unchanged.
 
 Validation: 111 headless checks (including 13 new readability checks), PWA verification and clean export. Browser: visible melee ground warning, directional dodge, rifle/reload and 3-enemy victory in 15.3s at HP68, accuracy96%; no console errors/warnings. Physical mobile performance remains unverified.
+
+
+## Battlefield Update - 2026-11-15
+
+Added static industrial silhouettes, service gantries, painted lanes and launch markings outside/along the playable boundary. These use no collision or navigation bodies; scenery shadows are disabled. Cargo Yard uses a warm horizon/light and Reactor Ring a cool sky/light. Fog is reduced and affects the sky only slightly. Existing Kenney cover and all asset credits remain intact.
+
+Gundam gait phase now follows actual horizontal speed, with subtle stride bob and travel lean. Grounded dash, landing and Zaku evade generate six-puff dust effects, capped at eight simultaneous effects with a 0.42s lifetime. Destruction layers four rising smoke puffs after sparks/flash; ordinary impacts allocate no smoke. All effects pause correctly and expire. No damage or movement speed changes.
+
+Validation: 120 headless checks and PWA checks passed; clean Web export. Destruction cleanup regression waits for actual maximum effect lifetime. Local browser victories: Cargo Yard 27.9s/HP84, Reactor Ring 12.5s/HP84. No console warnings/errors. Physical mobile performance remains unverified.

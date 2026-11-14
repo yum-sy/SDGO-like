@@ -26,6 +26,7 @@ var pending_aim := Vector3.ZERO
 var knockback := Vector3.ZERO
 var ai_enabled := true
 var step_time := 0.0
+var was_evading := false
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 3
@@ -119,6 +120,10 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	var toward := player.global_position-global_position
 	if melee_clock.running: toward = melee_facing
 	model.rotation.y = lerp_angle(model.rotation.y,atan2(toward.x,toward.z),8*delta)
+	var evading: bool = brain.dodge_left > 0 and stun == 0
+	if evading and not was_evading and is_on_floor():
+		preload("res://scripts/ground_fx.gd").spawn(get_parent(),global_position)
+	was_evading = evading
 	model.melee_windup = melee_clock.running
 	model.animate(velocity,windup,brain.dodge_left > 0 and stun == 0,delta)
 	if melee_clock.running:

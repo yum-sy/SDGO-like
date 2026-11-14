@@ -115,12 +115,13 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	recoil = move_toward(recoil,0,delta*9)
 	hurt = move_toward(hurt,0,delta*5)
 	landing = move_toward(landing,0,delta*6)
-	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else 0.0)+hurt*0.16,delta*12)
+	var forward_speed := (global_basis.inverse()*velocity).z
+	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else clampf(forward_speed/70,-0.1,0.1))+hurt*0.16,1-exp(-12*delta))
 	var blend := 1-exp(-16*delta)
 	evade_weight = lerpf(evade_weight,1.0 if boost_active else 0.0,blend)
 	var local_motion := global_basis.inverse()*velocity
 	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08,blend)
-	position.y = -landing*0.12
+	position.y = -landing*0.12 + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
 	for flame in thrusters:
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
