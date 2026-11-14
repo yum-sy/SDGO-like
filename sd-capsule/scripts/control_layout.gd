@@ -11,6 +11,13 @@ static func buttons(size: Vector2) -> Dictionary:
 		"reload":Rect2(size-Vector2(400,270),Vector2(90,90)),
 		"aim":Rect2(size-Vector2(270,400),Vector2(105,80)),
 		"cycle":Rect2(size-Vector2(145,400),Vector2(100,80)),
-		"pause":Rect2(Vector2(size.x-120,54),Vector2(80,58))}
+		"pause":Rect2(Vector2(size.x-120,94),Vector2(80,58))}
 static func menu_buttons(size: Vector2) -> Dictionary:
-	return {"arena":Rect2(Vector2(size.x*0.5-280,size.y*0.5+170),Vector2(260,52)),"difficulty":Rect2(Vector2(size.x*0.5,size.y*0.5+170),Vector2(280,52)),"mute":Rect2(Vector2(size.x*0.5-280,size.y*0.5+105),Vector2(180,52)),"quality":Rect2(Vector2(size.x*0.5-80,size.y*0.5+105),Vector2(220,52))}
+	var x := 48.0+safe.x
+	var y := size.y-214-safe.w
+	return {
+		"restart":Rect2(x,y+88,528,80),
+		"arena":Rect2(x,y,258,76),
+		"difficulty":Rect2(x+270,y,258,76),
+		"mute":Rect2(size.x-354-safe.z,20+safe.y,170,36),
+		"quality":Rect2(size.x-174-safe.z,20+safe.y,126,36)}

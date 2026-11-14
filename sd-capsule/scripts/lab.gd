@@ -5,6 +5,10 @@ const UnitMotor = preload("res://scripts/unit_motor.gd")
 const Arena = preload("res://scripts/arena_layout.gd")
 const Rules = preload("res://scripts/sortie_rules.gd")
 var rules := Rules.new()
+var coaching := preload("res://scripts/showcase_flow.gd").new()
+var showcase_time := 0.0
+var menu_camera := false
+var overlay_open := false
 var best_score := 0
 var arena := Arena.new()
 var combat: Node3D
@@ -180,6 +184,13 @@ func _ready() -> void:
 	apply_quality()
 	update_camera()
 func update_camera(delta: float = 1.0) -> void:
+	if menu_camera:
+		camera.top_level = false
+		camera.transform = Transform3D.IDENTITY
+		camera.h_offset = 0
+		camera.v_offset = 0
+		camera.fov = 65
+		menu_camera = false
 	camera_clock += delta
 	var desired := unit.position+Vector3(0,1.6,0)
 	pivot.position = pivot.position.lerp(desired,1-exp(-22*delta))
@@ -210,6 +221,22 @@ func save_settings() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.force_fs_sync()
 func _process(delta: float) -> void:
+	if mode == "ready" and is_physics_processing() and is_instance_valid(camera):
+		showcase_time += delta
+		menu_camera = true
+		camera.top_level = true
+		var orbit := 0.4+sin(showcase_time*0.18)*0.12
+		camera.global_position = unit.global_position+Vector3(4.8*sin(orbit),2.6,-4.8*cos(orbit))
+		camera.look_at(unit.global_position+Vector3.UP*1.12,Vector3.UP)
+		camera.h_offset = -1.3
+		camera.v_offset = 0
+		camera.fov = 48
+		unit.visual.visible = true
+	if OS.has_feature("web"):
+		overlay_open = bool(JavaScriptBridge.eval("!!window.capsuleOverlayOpen"))
+	if overlay_open and mode == "playing":
+		mode = "paused"
+		pilot.clear()
 	safe_clock += delta
 	if OS.has_feature("web") and safe_clock > 1:
 		safe_clock = 0
@@ -228,6 +255,9 @@ func _process(delta: float) -> void:
 		average_fps /= fps_samples.size()
 func _physics_process(delta: float) -> void:
 	var command: Dictionary = pilot.sample()
+	if overlay_open:
+		pilot.clear()
+		return
 	if command.get("difficulty",false) and mode in ["ready","result"]:
 		Rules.selected = 1-rules.level
 		get_tree().reload_current_scene()
@@ -250,6 +280,14 @@ func _physics_process(delta: float) -> void:
 		pilot.clear()
 	if mode in ["ready","paused"] and command.restart:
 		mode = "playing"
+		if menu_camera:
+			camera.top_level = false
+			camera.transform = Transform3D.IDENTITY
+			camera.h_offset = 0
+			camera.v_offset = 0
+			camera.fov = 65
+			menu_camera = false
+			update_camera()
 		pilot.menu_open = false
 		pilot.clear()
 		return
@@ -262,6 +300,7 @@ func _physics_process(delta: float) -> void:
 			child.set_physics_process(mode == "playing")
 	if mode != "playing":
 		return
+	coaching.observe(command,delta)
 	unit.simulate(command,delta)
 	update_camera(delta)
 	combat.step(command,delta)

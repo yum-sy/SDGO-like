@@ -197,3 +197,33 @@ Validation: 132 headless checks and PWA verification passed; clean Web export. B
 Removed competing double interpolation on Gundam saber shoulders. A clock-driven attack envelope now blends a stronger sword arm pose, shield counterbalance, planted legs and a deeper third-hit brace, returning smoothly to neutral in recovery. Rifle recoil offsets the arm and weapon from their shared original shoulder pivot and restores them afterward. Zaku punches now include torso twist, guarding arm and planted legs. Blade sweep, damage windows and damage values are unchanged.
 
 Validation: 138 headless checks including six attack-motion checks; PWA verification and clean web export. Browser verified close combat, enemy punch pose, saber-to-rifle transition and enemy damage/destruction with no console errors/warnings. Existing rigid-part model limitations remain; no new skeletal assets were introduced.
+
+
+## 투자 시연 고도화 계획 / 2026-11-15
+
+목표 산출물은 PC에서 3분 이내 직접 플레이할 수 있는 Showcase Candidate입니다. 투자 유치 성공이나 상용화 준비 완료를 보증하는 표현은 사용하지 않습니다. 아래 일정은 작업 순서와 제작 공수 추정이며 무인 예약 작업 또는 확정 납기 약속이 아닙니다.
+
+| 단계 | 예상 제작 공수 | 산출물 / 통과 기준 |
+|---|---|---|
+| 1. 시연 설계 | 0.5일 | 첫 20초에 목표·조작·기체를 이해; 시연 스크립트와 디자인 규칙 |
+| 2. 시각적 완성도 | 1~2일 | 기체 중심 출격 화면, 통일된 HUD/결과 화면, 명확한 클릭 영역 |
+| 3. 플레이 흐름 | 1~2일 | 상황별 안내, 엄폐 표적 탐색, 근접/사격/회피가 이어지는 한 판 |
+| 4. 회귀·패키징 | 1일 | 자동 검사, 두 전장 브라우저 완주, PWA 갱신, 배포 증거 |
+| 5. 외부 시연 승인 | 3~5일 + 권리 협의 별도 | 처음 플레이하는 5명 관찰, 실기기 성능, 권리 검토, 독자 IP/허가 방향 결정 |
+
+디자인 규칙: 짙은 남색 패널 + 밝은 중립 텍스트, 민트색은 조작/선택, 주황색은 위험, 보라색은 근접 공격. 출격 화면은 기체를 보여주는 3D 구도와 한 개의 주 행동 버튼을 우선합니다. 전투 HUD는 좌측 생존/무장, 우측 목표/레이더, 중앙 조준/공격 예고만 유지합니다. 장식보다 읽기 쉬운 위계와 넓은 여백을 우선합니다.
+
+투자 시연의 외부 승인 기준: iPhone/Safari와 Android/Chrome에서 10분 입력·설치·재실행, 목표 기기의 실제 프레임 시간, 5명 중 4명 이상이 설명 없이 첫 공격 및 임무 완료, 3회 연속 시연 중 크래시 0회. 아직 미측정인 항목은 합격으로 표시하지 않습니다. 멀티플레이는 상태 분리 기반만 있으며 4인 네트워크 구현 완료를 주장하지 않습니다.
+
+권리 게이트: CREDITS의 모델 CC BY 4.0 / Kenney CC0는 확인되어 있으나 건담 IP의 사업화 권리를 확보했다는 의미는 아닙니다. CC 라이선스가 상표권 등 모든 권리를 제공하지 않는다는 공식 안내: https://creativecommons.org/faq/ . 투자 자료에는 비공식 팬 프로토타입임을 명시하고, 사업화 전 권리 확보 또는 독자 IP 전환 비용/일정을 별도 산정합니다.
+
+
+## Showcase Candidate 1 / execution record
+
+Completed locally: redesigned loading/launch/pause/result screens, real-unit showcase camera, compact combat HUD, context-sensitive opening coaching, Korean field guide, explicit launch button, safe dialog pause/resume, occluded target-location assist without through-wall lock, and a responsive showcase overview page. Prototype overview and image are included in the PWA precache. Mobile pause was moved below the mission card after visual QA found an overlap.
+
+Browser walkthrough: Cargo Yard 19.1s / HP36 / accuracy88%, Reactor Ring 10.6s / HP84 / accuracy100%; guide dialog opened during combat and returned to pause; 844x390 menu and touch-control layout inspected. Runtime console had no errors/warnings in the tested sequence. Hero image is an actual browser capture, not a concept render.
+
+Status against the plan: stages 1-4 have an internally reviewed candidate. Stage 5 is pending: real-device performance/install tests, five first-time players, and commercial IP direction. This is not a claim that commercial-ready art, skeletal animation, multiplayer, demand or fundraising outcomes have been validated. The current model's face/material detail and rigid hand/weapon attachment remain art-production limitations; a licensed production asset pass or original IP is a separate follow-up milestone.
+
+Validation: all 11 headless test suites passed (153 checks); clean Compatibility web export; PWA fresh precache, offline showcase assets, scoped cleanup and navigation checks passed. Final responsive QA verified the corrected touch pause position and the 390px-wide overview page.

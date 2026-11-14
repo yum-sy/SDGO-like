@@ -120,4 +120,4 @@ func menu_press(position: Vector2) -> void:
 		if buttons[action].has_point(position):
 			queued[action] = true
 			return
-	queued.restart = true
+	# Only the visible primary action launches; background clicks are safe.

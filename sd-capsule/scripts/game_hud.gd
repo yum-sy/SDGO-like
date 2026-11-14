@@ -27,31 +27,43 @@ func bar(at: Vector2, width: float, ratio: float, tint: Color) -> void:
 	draw_rect(Rect2(at,Vector2(width*clampf(ratio,0,1),9)),tint)
 func _draw() -> void:
 	if not is_instance_valid(game) or not is_instance_valid(game.combat): return
+	if game.mode != "playing":
+		preload("res://scripts/showcase_menu.gd").draw(self)
+		return
 	var battle = game.combat
 	var player = game.unit
 	var pilot = game.pilot
 	var center := size*0.5
-	var left := 44.0+Layout.safe.x
-	draw_rect(Rect2(Vector2(left-20,22+Layout.safe.y),Vector2(310,160)),Color(0.02,0.06,0.1,0.72))
-	text(Vector2(left,48),"RX-78 // "+game.rules.LEVELS[game.rules.level],18,MINT)
-	text(Vector2(left,78),"HP %03d    ZAKU %d / 3" % [player.hp,battle.kills],22)
-	health_bar(Vector2(left,89),265,player,Color(0.5,0.85,1))
-	text(Vector2(left,122),"BOOST %03d%s" % [player.booster,"  COOLING" if player.state.boost_locked else ""],16)
-	bar(Vector2(left,131),265,player.booster/100.0,MINT)
-	text(Vector2(left,168),"THRUSTER READY" if player.booster >= 22 else "THRUSTER RECHARGING",14)
+	var left := 32.0+Layout.safe.x
+	var top := 24.0+Layout.safe.y
+	draw_colored_polygon(PackedVector2Array([Vector2(left-12,top-10),Vector2(left+270,top-10),Vector2(left+270,top+170),Vector2(left+250,top+190),Vector2(left-12,top+190)]),Color(0.025,0.055,0.08,0.88))
+	draw_line(Vector2(left-12,top-10),Vector2(left+95,top-10),MINT,3)
+	text(Vector2(left,top+12),"RX-78-2  /  "+game.rules.LEVELS[game.rules.level],13,MINT)
+	text(Vector2(left,top+46),"%03d" % player.hp,30,INK)
+	text(Vector2(left+72,top+44),"ARMOR",12,Color("8fa6b6"))
+	health_bar(Vector2(left,top+56),250,player,Color("a9d9ef"))
+	text(Vector2(left,top+89),"BOOST",12,Color("8fa6b6"))
+	text(Vector2(left+200,top+89),"%03d" % player.booster,16,MINT)
+	bar(Vector2(left,top+98),250,player.booster/100.0,MINT)
 	var rifle = battle.rifle
 	var name_text := "BEAM RIFLE" if battle.weapon == 0 else "BEAM SABER"
-	var ammo_text := "%d / 6" % rifle.ammo if battle.weapon == 0 else "COMBO %d / 3" % battle.combo
-	text(Vector2(left,215),name_text+"    "+ammo_text,24)
+	var ammo_text := "%d / 6" % rifle.ammo if battle.weapon == 0 else "%d / 3" % battle.combo
+	text(Vector2(left,top+136),name_text,18)
+	text(Vector2(left+192,top+136),ammo_text,20,MINT)
 	if rifle.reload_left > 0:
-		text(Vector2(left,244),"RELOADING %.1f s" % rifle.reload_left,18,Color(1,0.8,0.35))
-		bar(Vector2(left,257),265,1-rifle.reload_left/1.6,Color(1,0.8,0.35))
+		bar(Vector2(left,top+151),250,1-rifle.reload_left/1.6,Color("f1ba74"))
+		text(Vector2(left,top+179),"RELOAD  %.1fs" % rifle.reload_left,13,Color("f1ba74"))
 	else:
-		text(Vector2(left,244),"SABER "+battle.attack.stage(),16)
 		for round_index in range(6):
-			draw_rect(Rect2(Vector2(left+round_index*30,257),Vector2(23,5)),MINT if round_index < rifle.ammo else Color(0.2,0.3,0.35))
-	text(Vector2(size.x-260-Layout.safe.z,36+Layout.safe.y),"TIME  %05.1f" % battle.elapsed,20)
-	text(Vector2(44,size.y-20),"Models: nickqd / krit yamsaso · CC BY 4.0     Audio & props: Kenney · CC0",12)
+			draw_rect(Rect2(Vector2(left+round_index*42,top+151),Vector2(34,5)),MINT if round_index < rifle.ammo else Color("344857"))
+		text(Vector2(left,top+179),"SABER  "+battle.attack.stage(),12,Color("8fa6b6"))
+	var mission_x := size.x-290-Layout.safe.z
+	draw_rect(Rect2(Vector2(mission_x,top-10),Vector2(266,64)),Color(0.025,0.055,0.08,0.88))
+	text(Vector2(mission_x+14,top+12),"ELIMINATE HOSTILES",12,Color("8fa6b6"))
+	for i in range(3):
+		draw_rect(Rect2(Vector2(mission_x+14+i*24,top+26),Vector2(16,8)),MINT if i < battle.kills else Color("344857"))
+	text(Vector2(mission_x+100,top+36),"%d / 3" % battle.kills,20,INK)
+	text(Vector2(mission_x+182,top+36),"%04.1fs" % battle.elapsed,16,MINT)
 	if battle.hurt_left > 0:
 		draw_rect(Rect2(Vector2.ZERO,size),Color(1,0.12,0.1,battle.hurt_left*0.4))
 		var incoming: Vector3 = Basis(Vector3.UP,-player.yaw)*(player.last_hit_from-player.position)
@@ -61,7 +73,7 @@ func _draw() -> void:
 		draw_colored_polygon(PackedVector2Array([marker+toward*14,marker-toward*5+perpendicular*10,marker-toward*5-perpendicular*10]),Color(1,0.45,0.25))
 	if game.mode == "playing":
 		var progress := "%d/1" % mini(battle.melee_kills,1) if game.arena.index == 0 else "%d/2" % mini(game.rules.cover_breaks,2)
-		text(Vector2(left,292),"BONUS: "+game.rules.specialty_name()+"  "+progress,14,MINT)
+		text(Vector2(left,top+215),"BONUS  /  "+game.rules.specialty_name()+"  "+progress,12,MINT)
 		if not battle.auto_aim: text(center+Vector2(-45,30),"FREE AIM",16,MINT)
 		if battle.notice_left > 0:
 			var width := font.get_string_size(battle.notice,HORIZONTAL_ALIGNMENT_LEFT,-1,20).x
@@ -73,7 +85,7 @@ func _draw() -> void:
 			if not game.camera.is_position_behind(at):
 				var screen: Vector2 = game.camera.unproject_position(at)
 				bar(screen-Vector2(24,0),48,cover.hp/75.0,Color(0.7,0.85,1))
-		var radar := Vector2(size.x-105-Layout.safe.z,(240 if pilot.touch_visible else 135)+Layout.safe.y)
+		var radar := Vector2(size.x-105-Layout.safe.z,(240 if pilot.touch_visible else 154)+Layout.safe.y)
 		draw_circle(radar,67,Color(0.025,0.07,0.1,0.72))
 		draw_arc(radar,67,0,TAU,48,Color(0.4,0.65,0.7,0.6),1)
 		draw_line(radar+Vector2(-60,0),radar+Vector2(60,0),Color(0.3,0.5,0.55,0.35))
@@ -130,40 +142,10 @@ func _draw() -> void:
 				draw_rect(rect,Color(0.6,0.85,1,0.4),false,1)
 				var label: String = {"cycle":"TARGET","weapon":"SWAP","aim":"AUTO ON" if battle.auto_aim else "FREE AIM"}.get(action,action.to_upper())
 				text(rect.position+Vector2(12,rect.size.y*0.5+6),label,20)
-		elif battle.elapsed < 8:
-			text(Vector2(44,size.y-77),"WASD move   SPACE jump / boost   SHIFT dash   TAB target   Q/E weapon   C free aim",16)
-			text(Vector2(44,size.y-51),"LMB / F fire   RMB / V saber   R reload   ESC pause   M sound   L quality   T touch UI",16)
+		var hint: String = game.coaching.hint(battle,pilot.touch_visible)
+		if not hint.is_empty():
+			var hint_width := font.get_string_size(hint,HORIZONTAL_ALIGNMENT_LEFT,-1,16).x
+			var hint_y := size.y-32-Layout.safe.w if pilot.touch_visible else size.y-54-Layout.safe.w
+			draw_rect(Rect2(Vector2(center.x-hint_width/2-16,hint_y-23),Vector2(hint_width+32,34)),Color(0.02,0.05,0.08,0.9))
+			text(Vector2(center.x-hint_width/2,hint_y),hint,16,INK)
 		return
-	# Menu stays over the full 3D viewport; it never reserves screen space.
-	draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.035,0.06,0.8))
-	var x := center.x-280
-	var y := center.y-125
-	var title := "READY TO LAUNCH" if game.mode == "ready" else ("PAUSED" if game.mode == "paused" else ("MISSION COMPLETE" if battle.won else "UNIT DOWN"))
-	text(Vector2(x,y),title,36,MINT if not battle.lost else Color(1,0.5,0.4))
-	var detail: String = game.arena.NAMES[game.arena.index]+" / 3 SPECIALIST ZAKU"
-	if game.mode == "result": detail = "Destroyed %d / 3   Time %.1fs   Accuracy %d%%" % [battle.kills,battle.elapsed,100*battle.hits/maxi(1,battle.shots)]
-	text(Vector2(x,y+44),detail,19)
-	if game.mode == "result" and battle.won:
-		var grade := "S" if player.hp >= 80 and battle.elapsed < 30 else ("A" if player.hp >= 50 else "B")
-		text(Vector2(x+460,y),grade,64,MINT)
-	if game.mode == "paused":
-		text(Vector2(x,y-35),"%d FPS / AVG %d" % [Engine.get_frames_per_second(),game.average_fps],16)
-	if game.mode == "result":
-		var awards: Array[bool] = game.rules.medals(battle,player)
-		var labels := ["SPEED <45s","ARMOR 60+",game.rules.specialty_name()]
-		for i in range(3):
-			text(Vector2(x+i*190,y+79),("+ " if awards[i] else "- ")+labels[i],15,MINT if awards[i] else Color(0.5,0.6,0.65))
-		text(Vector2(x,y+111),"SCORE %05d    BEST %05d" % [game.rules.score(battle,player),game.best_score],22)
-	else:
-		text(Vector2(x,y+78),"BONUS: "+game.rules.specialty_name()+" / finish <45s / armor 60+",17)
-		text(Vector2(x,y+108),"C / AUTO: free aim. Break crates to open new routes.",18)
-	text(Vector2(x,y+148),"ENTER / TAP TO "+("RETRY" if game.mode == "result" else "PLAY"),26,MINT)
-	text(Vector2(x,y+185),"BEST %.1fs / %05d PTS" % [game.best_time,game.best_score] if game.best_time>0 else "Clear the sortie and earn optional medals.",16)
-	var buttons := Layout.menu_buttons(size)
-	for key in buttons:
-		var rect: Rect2 = buttons[key]
-		draw_rect(rect,Color(0.15,0.27,0.36))
-		var label := ("SOUND OFF" if game.sounds.muted else "SOUND ON") if key == "mute" else ("QUALITY LOW" if game.low_quality else "QUALITY HIGH")
-		if key == "arena": label = "MAP LOCKED IN COMBAT" if game.mode == "paused" else "N / "+game.arena.NAMES[game.arena.index]
-		if key == "difficulty": label = "LOCKED" if game.mode == "paused" else "H / "+game.rules.LEVELS[game.rules.level]
-		text(rect.position+Vector2(16,33),label,18 if key in ["arena","difficulty"] else 20)

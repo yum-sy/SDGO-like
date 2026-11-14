@@ -70,6 +70,15 @@ func update_target(cycle: bool) -> void:
 			player.focus_yaw = atan2(-offset.x,-offset.z)
 			manual_target_left = 0.35
 			return
+		# A blocked target can still be located, but never receives a through-wall lock.
+		var hidden: Array = targets.filter(func(t): return t.hp > 0 and player.global_position.distance_to(t.global_position) <= RANGE)
+		if not hidden.is_empty():
+			hidden.sort_custom(func(a,b): return player.global_position.distance_squared_to(a.global_position) < player.global_position.distance_squared_to(b.global_position))
+			var offset: Vector3 = hidden[0].global_position-player.global_position
+			player.focus_yaw = atan2(-offset.x,-offset.z)
+			selected = null
+			announce("TARGET BEHIND COVER / REPOSITION OR BOOST")
+			return
 	if manual_target_left > 0 and not is_nan(player.focus_yaw) and is_instance_valid(selected) and selected.hp > 0:
 		var sight := ray(player.aim_point(),selected.aim_point())
 		if player.global_position.distance_to(selected.global_position) <= RANGE and not sight.is_empty() and sight.collider == selected: return

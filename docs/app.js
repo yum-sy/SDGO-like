@@ -8,9 +8,11 @@
   const install = document.getElementById('install');
   const update = document.getElementById('update');
   const canvas = document.getElementById('canvas');
+  const toolbox = document.getElementById('web-tools');
+  window.capsuleOverlayOpen = false;
   let prompt, waiting;
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  canvas.addEventListener('pointerdown', () => canvas.focus());
+  canvas.addEventListener('pointerdown', () => {canvas.focus();toolbox.open=false;});
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault(); prompt = e; install.hidden = false;
   });
@@ -38,7 +40,7 @@
   });
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./index.service.worker.js').then(reg => {
-      const offer = () => { if(reg.waiting && navigator.serviceWorker.controller) {waiting=reg.waiting;update.hidden=false;} };
+      const offer = () => { if(reg.waiting && navigator.serviceWorker.controller) {waiting=reg.waiting;update.hidden=false;toolbox.open=true;} };
       offer();
       reg.addEventListener('updatefound', () => { const worker=reg.installing; worker?.addEventListener('statechange',offer); });
       return navigator.serviceWorker.ready;
@@ -50,6 +52,14 @@
     });
     update.onclick = () => waiting?.postMessage({type:'SKIP_WAITING'});
   } else note.textContent='온라인 모드';
-  document.getElementById('credits').onclick = () => document.getElementById('credit-dialog').showModal();
-  document.getElementById('close-credits').onclick = () => document.getElementById('credit-dialog').close();
+  for (const name of ['credits','guide']) {
+    const dialog = document.getElementById(name === 'credits' ? 'credit-dialog' : 'guide-dialog');
+    document.getElementById(name).onclick = () => {
+      window.capsuleOverlayOpen = true;
+      if(document.pointerLockElement) document.exitPointerLock();
+      dialog.showModal();
+    };
+    document.getElementById('close-'+name).onclick = () => dialog.close();
+    dialog.addEventListener('close', () => {window.capsuleOverlayOpen=false;canvas.focus();});
+  }
 })();

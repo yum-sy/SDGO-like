@@ -33,4 +33,8 @@ handlers.fetch({request:{method:'GET',url:'https://example.test/game/index.pck',
 assert.equal(await pending,'new-build');
 handlers.fetch({request:{method:'GET',url:'https://example.test/game/',mode:'navigate'},respondWith(p){pending=p;}});
 assert.equal(await pending,'new-build');
+for (const file of ['showcase.html','showcase-preview.jpg']) {
+ handlers.fetch({request:{method:'GET',url:'https://example.test/game/'+file,mode:'cors'},respondWith(p){pending=p;}});
+ assert.equal(await pending,'new-build');
+}
 console.log('PASS PWA: fresh precache, scoped cleanup, offline package and navigation');

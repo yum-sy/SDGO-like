@@ -15,6 +15,9 @@ html = html.replace('"serviceWorker":"index.service.worker.js"','"serviceWorker"
 html = html.replace('</head>', '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#172537"></head>')
 html = html.replace('</body>',(root/'web/overlay.html').read_text()+'</body>')
 (dist/'index.html').write_text(html.rstrip()+'\n')
+for name in ('showcase.html','showcase-preview.jpg'):
+    source=root/'web'/name
+    if source.exists(): (dist/name).write_bytes(source.read_bytes())
 (dist/'app.js').write_text((root/'web/app.js').read_text())
 (dist/'CREDITS.txt').write_text((root/'CREDITS.txt').read_text())
 (dist/'.nojekyll').touch()
