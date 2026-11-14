@@ -7,6 +7,7 @@ var veteran := false
 var last_hit_kind := "other"
 var role := "ASSAULT"
 var home := Vector3.ZERO
+var attack_warning: MeshInstance3D
 var aim_line: MeshInstance3D
 var brain := Brain.new()
 var max_hp := 180
@@ -55,6 +56,9 @@ func _ready() -> void:
 	flash_mesh.material_override = material
 	flash_mesh.visible = false
 	add_child(flash_mesh)
+	attack_warning = preload("res://scripts/attack_warning.gd").new()
+	add_child(attack_warning)
+	attack_warning.top_level = true
 	aim_line = MeshInstance3D.new()
 	var line := BoxMesh.new()
 	line.size = Vector3(0.025,0.025,1)
@@ -81,6 +85,7 @@ func damage(amount: int, kind: String = "other") -> void:
 	model.hit()
 	melee_clock.cancel()
 	model.strike_phase = -1
+	attack_warning.hide()
 	if hp == 0:
 		collision_layer = 0
 		collision_mask = 0
@@ -156,6 +161,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 			else:
 				windup = 1.0 if role == "SUPPORT" else 0.65
 			cooldown = (1.7 if role == "ASSAULT" else 2.8)*(0.8 if veteran else 1.0)
+	attack_warning.sync(self)
 	if position.y < -12:
 		damage(max_hp)
 func _process(delta: float) -> void:

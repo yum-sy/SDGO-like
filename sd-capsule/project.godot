@@ -1,6 +1,6 @@
 config_version=5
 [application]
-config/name="Capsule Sortie · Motion Update"
+config/name="Capsule Sortie · Combat Readability Update"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="CapsuleSortie"
 run/main_scene="res://main.tscn"

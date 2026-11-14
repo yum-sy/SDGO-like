@@ -1,4 +1,4 @@
-# Capsule Sortie — Motion Update
+# Capsule Sortie — Combat Readability Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
@@ -163,3 +163,12 @@ Gundam locomotion, aiming, reload and evade poses now blend exponentially. Direc
 Saber ribbons use the authoritative attack clock's swept angles, capped at 12 nodes with a 0.14s lifetime. Hits and destruction emit expanding shock rings; the third combo hit has a larger effect and lower-pitched impact. Damage, attack intervals and invulnerability rules are unchanged.
 
 Validation: 90 existing checks plus 8 motion checks, PWA checks and web export. Recoil regression now compares against the prepared aiming pose. Browser combat used saber finishing, rifle/reload and directional dash to win with 3 kills in 21.9s, HP80 and the saber medal. No browser errors/warnings. Physical mobile performance remains unverified.
+
+
+## Combat Readability Update - 2026-11-15
+
+Enemy melee now projects its committed 2.8m / dot>0.45 attack cone onto the ground during windup and contact. Stagger, recovery and death remove the warning. This is a cosmetic ground projection; terrain height and cover still use existing authoritative collision checks. Enemy bolts have short directional streaks and bounded impact sparks.
+
+Player and enemy health bars show delayed orange damage loss. The reticle responds to rifle cooldown and shows reload progress at the center; active saber attacks display the combo number. When a wall compresses the spring arm into the player, the player visual hides below 1.5m and returns above 1.9m to avoid obstructing aim and flickering. Collision and health are unchanged.
+
+Validation: 111 headless checks (including 13 new readability checks), PWA verification and clean export. Browser: visible melee ground warning, directional dodge, rifle/reload and 3-enemy victory in 15.3s at HP68, accuracy96%; no console errors/warnings. Physical mobile performance remains unverified.

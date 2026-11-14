@@ -174,6 +174,12 @@ func update_camera(delta: float = 1.0) -> void:
 	camera.h_offset = sin(camera_clock*83)*trauma*0.06
 	camera.v_offset = cos(camera_clock*71)*trauma*0.04
 	camera.fov = lerpf(camera.fov,72.0 if unit.dash_left > 0 else 65.0,1-exp(-10*delta))
+	update_player_visibility()
+func update_player_visibility() -> void:
+	# Preserve wall collision; only hide the visual when the spring arm is compressed.
+	var distance := camera.global_position.distance_to(unit.aim_point())
+	if distance < 1.5: unit.visual.visible = false
+	elif distance > 1.9: unit.visual.visible = true
 func apply_quality() -> void:
 	if is_instance_valid(key_light): key_light.shadow_enabled = not low_quality
 	get_viewport().scaling_3d_scale = 0.65 if low_quality else 1.0

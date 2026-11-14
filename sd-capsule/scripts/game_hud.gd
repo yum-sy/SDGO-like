@@ -1,11 +1,25 @@
 extends Control
 const Layout = preload("res://scripts/control_layout.gd")
 var game: Node3D
+const DamageGauge = preload("res://scripts/damage_gauge.gd")
+var health_gauges := {}
 var font: Font = ThemeDB.fallback_font
 const INK = Color(0.87,0.94,1)
 const MINT = Color(0.35,1,0.8)
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if is_instance_valid(game) and is_instance_valid(game.combat):
+		for actor in [game.unit]+game.combat.targets:
+			var key: int = actor.get_instance_id()
+			if not health_gauges.has(key): health_gauges[key] = DamageGauge.new()
+			var maximum: float = 100.0 if actor == game.unit else float(actor.max_hp)
+			health_gauges[key].update(actor.hp/maximum,delta if game.mode == "playing" else 0)
 	queue_redraw()
+func health_bar(at: Vector2, width: float, actor: Node, tint: Color) -> void:
+	var maximum: float = 100.0 if actor == game.unit else float(actor.max_hp)
+	var ratio: float = actor.hp/maximum
+	var gauge = health_gauges.get(actor.get_instance_id())
+	bar(at,width,gauge.trailing if gauge != null else ratio,Color(1,0.62,0.22))
+	draw_rect(Rect2(at,Vector2(width*ratio,9)),tint)
 func text(at: Vector2, value: String, px: int = 20, tint: Color = INK) -> void:
 	draw_string(font,at,value,HORIZONTAL_ALIGNMENT_LEFT,-1,px,tint)
 func bar(at: Vector2, width: float, ratio: float, tint: Color) -> void:
@@ -21,7 +35,7 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2(left-20,22+Layout.safe.y),Vector2(310,160)),Color(0.02,0.06,0.1,0.72))
 	text(Vector2(left,48),"RX-78 // "+game.rules.LEVELS[game.rules.level],18,MINT)
 	text(Vector2(left,78),"HP %03d    ZAKU %d / 3" % [player.hp,battle.kills],22)
-	bar(Vector2(left,89),265,player.hp/100.0,Color(0.5,0.85,1))
+	health_bar(Vector2(left,89),265,player,Color(0.5,0.85,1))
 	text(Vector2(left,122),"BOOST %03d%s" % [player.booster,"  COOLING" if player.state.boost_locked else ""],16)
 	bar(Vector2(left,131),265,player.booster/100.0,MINT)
 	text(Vector2(left,168),"THRUSTER READY" if player.booster >= 22 else "THRUSTER RECHARGING",14)
@@ -71,8 +85,14 @@ func _draw() -> void:
 			var dot_pos := Vector2(relative.x,relative.z)*1.5
 			dot_pos = dot_pos.limit_length(59)
 			draw_circle(radar+dot_pos,4,Color(1,0.55,0.25) if enemy.windup > 0 else Color(0.95,0.4,0.4))
-		draw_line(center-Vector2(6,0),center+Vector2(6,0),MINT)
-		draw_line(center-Vector2(0,6),center+Vector2(0,6),MINT)
+		var gap: float = 5+rifle.cooldown/rifle.INTERVAL*7
+		var reticle_tint := MINT if rifle.reload_left == 0 else Color(1,0.8,0.35)
+		for axis in [Vector2.UP,Vector2.DOWN,Vector2.LEFT,Vector2.RIGHT]:
+			draw_line(center+axis*gap,center+axis*(gap+6),reticle_tint,1.5)
+		if rifle.reload_left > 0:
+			draw_arc(center,23,-PI/2,-PI/2+TAU*(1-rifle.reload_left/rifle.RELOAD_TIME),40,reticle_tint,2)
+		if battle.attack.running:
+			text(center+Vector2(-36,56),"SABER %d" % battle.combo,16,Color(1,0.5,0.8))
 		for popup in battle.damage_popups:
 			if not game.camera.is_position_behind(popup.point):
 				var point: Vector2 = game.camera.unproject_position(popup.point)
@@ -91,7 +111,7 @@ func _draw() -> void:
 					draw_line(edge,edge-Vector2(corner.x*12,0),MINT,2)
 					draw_line(edge,edge-Vector2(0,corner.y*12),MINT,2)
 				text(at+Vector2(-30,-44),"%s / %dm" % [target.role,player.position.distance_to(target.position)],16,MINT)
-			bar(at+Vector2(-25,42),50,float(target.hp)/target.max_hp,Color(1,0.5,0.2) if target.windup>0 else MINT)
+			health_bar(at+Vector2(-25,42),50,target,Color(1,0.5,0.2) if target.windup>0 else MINT)
 			if target.windup > 0:
 				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else "INCOMING",16,Color(1,0.6,0.15))
 				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/(1.0 if target.role == "SUPPORT" else (0.55 if target.attack_kind == "melee" else 0.65))),24,Color(1,0.6,0.15),3)
