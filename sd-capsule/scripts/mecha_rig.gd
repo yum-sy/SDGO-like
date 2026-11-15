@@ -4,6 +4,8 @@ var joints := {}
 var joint_rest := {}
 var attack_weight := 0.0
 var weapon: MeshInstance3D
+var hand_socket: Node3D
+var shield_mount: Node3D
 var saber: MeshInstance3D
 var down := false
 var saber_equipped := false
@@ -53,6 +55,42 @@ func _ready() -> void:
 			if "armor_gun" in name_text:
 				weapon = part
 				gun_side = limb_side
+	# One physical shoulder hierarchy per arm. The imported props were exploded
+	# sideways; align their grip with the source hand instead of animating props alone.
+	for side_name in ["L", "R"]:
+		var arm: Node3D
+		var hand_center := Vector3.ZERO
+		for key in joints:
+			if "hand_lengan" in key and joint_sides[key] == side_name: arm = joints[key]
+			if ("hand_" + side_name + "__") in key:
+				hand_center = joints[key].get_child(0).get_aabb().get_center()
+		if arm == null: continue
+		for key in joints:
+			if joint_sides[key] != side_name or "leg_" in key or joints[key] == arm: continue
+			var old: Node3D = joints[key]
+			var part: MeshInstance3D = old.get_child(0)
+			part.reparent(arm)
+			if "armor_gun" in key:
+				part.position.x += hand_center.x - part.get_aabb().get_center().x
+			elif "armor_shield" in key:
+				part.position.x += hand_center.x + 0.10 - part.get_aabb().get_center().x
+			old.queue_free()
+			joints[key] = arm
+			joint_rest[key] = arm.position
+		var socket := Node3D.new()
+		arm.add_child(socket)
+		socket.position = hand_center - arm.position
+		if side_name == gun_side: hand_socket = socket
+		else: shield_mount = socket
+		# Compact gauntlet bridges the original tapered hand to its weapon grip.
+		var fist := MeshInstance3D.new()
+		var block := BoxMesh.new()
+		block.size = Vector3(0.19,0.16,0.20)
+		fist.mesh = block
+		var glove := StandardMaterial3D.new()
+		glove.albedo_color = Color("344454")
+		fist.material_override = glove
+		socket.add_child(fist)
 	saber = MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = 0.045
@@ -63,7 +101,7 @@ func _ready() -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = Color(1,0.2,0.75)
 	saber.material_override = mat
-	add_child(saber)
+	hand_socket.add_child(saber)
 	var grip := MeshInstance3D.new()
 	var handle := CylinderMesh.new()
 	handle.top_radius = 0.07
@@ -113,11 +151,13 @@ func apply_blade_pose() -> void:
 	if swing_left > 0:
 		# The same local arc is used by the authoritative swept hit test.
 		var direction := Vector3(sin(attack_angle),0,cos(attack_angle))
-		saber.position = Vector3(-0.65,1.15,0.55)+direction*0.8
-		saber.basis = Basis(Quaternion(Vector3.UP,direction))
+		var local_direction: Vector3 = hand_socket.basis.inverse() * hand_socket.get_parent().basis.inverse() * direction
+		saber.position = local_direction*0.91
+		saber.basis = Basis(Quaternion(Vector3.UP,local_direction.normalized()))
 	else:
-		saber.position = Vector3(-0.65,1.4,0.6)
-		saber.rotation = Vector3(0.2,0,-0.2)
+		var ready_direction := Vector3(-0.25,0.65,0.72).normalized()
+		saber.position = ready_direction*0.91
+		saber.basis = Basis(Quaternion(Vector3.UP,ready_direction))
 func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> void:
 	aim_left = maxf(0,aim_left-delta)
 	recoil = move_toward(recoil,0,delta*9)
@@ -135,8 +175,11 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
 	var stride := clampf(Vector2(velocity.x,velocity.z).length()/7.0,0,1) * 0.35 if grounded else 0.0
+	var animated := {}
 	for key in joints:
 		var joint: Node3D = joints[key]
+		if animated.has(joint): continue
+		animated[joint] = true
 		var side := 1.0 if joint_sides[key] == "L" else -1.0
 		var angle := sin(time) * stride * side
 		if "leg_" in key:

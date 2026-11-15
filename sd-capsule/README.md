@@ -227,3 +227,10 @@ Browser walkthrough: Cargo Yard 19.1s / HP36 / accuracy88%, Reactor Ring 10.6s /
 Status against the plan: stages 1-4 have an internally reviewed candidate. Stage 5 is pending: real-device performance/install tests, five first-time players, and commercial IP direction. This is not a claim that commercial-ready art, skeletal animation, multiplayer, demand or fundraising outcomes have been validated. The current model's face/material detail and rigid hand/weapon attachment remain art-production limitations; a licensed production asset pass or original IP is a separate follow-up milestone.
 
 Validation: all 11 headless test suites passed (153 checks); clean Compatibility web export; PWA fresh precache, offline showcase assets, scoped cleanup and navigation checks passed. Final responsive QA verified the corrected touch pause position and the 390px-wide overview page.
+
+
+## Hand attachment and deliberate melee / 2026-11-15
+
+Unified each arm under one shoulder transform and aligned the exploded source rifle/shield with the hand. Added compact gauntlets and a hand-local saber hilt; the blade stays attached throughout windup, strike and recovery. Melee now requires a fresh press; holding melee or saber-fire does not auto-repeat. A new press during the final 180 ms may buffer one next strike. Quick touch/mouse/key taps are retained between physics ticks. Updated in-game coaching and guide.
+
+Validation: 164 headless checks (including hand attachment, blade grip continuity, held melee/saber-fire and short touch tap regression), web export and PWA tests. Browser inspected weapon attachment and held-key recovery. Physical touchscreen validation remains pending.

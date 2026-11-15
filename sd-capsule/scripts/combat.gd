@@ -132,7 +132,7 @@ func step(command: Dictionary, delta: float) -> void:
 	melee_buffer = maxf(0,melee_buffer-delta)
 	if melee_requested and not melee_was_held: melee_buffer = 0.18
 	melee_was_held = melee_requested
-	if (melee_requested or melee_buffer > 0) and not attack.running and melee_cooldown == 0 and player.dash_left == 0:
+	if melee_buffer > 0 and not attack.running and melee_cooldown == 0 and player.dash_left == 0:
 		melee()
 		melee_buffer = 0
 	elif command.get("fire",false) and weapon == 0 and not attack.running and melee_cooldown == 0 and is_nan(player.focus_yaw) and rifle.try_fire():

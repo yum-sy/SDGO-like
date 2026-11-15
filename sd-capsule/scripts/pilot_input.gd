@@ -37,6 +37,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_SPACE: jump = true
+			KEY_V: queued.melee = true
+			KEY_F: queued.fire = true
 			KEY_R: queued.reload = true
 			KEY_TAB: queued.cycle = true
 			KEY_Q, KEY_E: queued.weapon = true
@@ -52,11 +54,13 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			left_down = event.pressed
+			if event.pressed: queued.fire = true
 			mouse_fire = event.pressed
 			if event.pressed and menu_open:
 				menu_press(event.position)
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			right_down = event.pressed
+			if event.pressed: queued.melee = true
 			mouse_melee = event.pressed
 	if event is InputEventMouseMotion and not menu_open:
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or left_down or right_down or (OS.has_feature("web") and JavaScriptBridge.eval("!!document.pointerLockElement")):
@@ -97,7 +101,7 @@ func held(action: String) -> bool:
 func sample() -> Dictionary:
 	move = Vector2(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W))) if active else Vector2.ZERO
 	move = (move+touch_move).limit_length()
-	var command := {"move":move,"look":look,"jump":jump,"boost":held("boost") or (active and Input.is_physical_key_pressed(KEY_SPACE)),"dash":held("dash") or (active and Input.is_physical_key_pressed(KEY_SHIFT)),"fire":mouse_fire or left_down or held("fire") or (active and Input.is_physical_key_pressed(KEY_F)),"melee":mouse_melee or right_down or held("melee") or (active and Input.is_physical_key_pressed(KEY_V))}
+	var command := {"move":move,"look":look,"jump":jump,"boost":held("boost") or (active and Input.is_physical_key_pressed(KEY_SPACE)),"dash":held("dash") or (active and Input.is_physical_key_pressed(KEY_SHIFT)),"fire":queued.get("fire",false) or mouse_fire or left_down or held("fire") or (active and Input.is_physical_key_pressed(KEY_F)),"melee":queued.get("melee",false) or mouse_melee or right_down or held("melee") or (active and Input.is_physical_key_pressed(KEY_V))}
 	for action in ["reload","cycle","weapon","restart","pause","mute","quality","suspend","arena","difficulty","aim"]:
 		command[action] = queued.get(action,false)
 	queued.clear()
