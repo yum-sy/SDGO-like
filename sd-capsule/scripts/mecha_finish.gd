@@ -19,7 +19,8 @@ static func apply(root: Node3D, gundam: bool) -> void:
     paint.rim_tint = 0.65
     if gundam:
      var tint := paint.albedo_color
-     if tint.r > 0.65 and tint.g > 0.65: paint.albedo_color = Color("aabac9")
+     if paint.vertex_color_use_as_albedo: paint.albedo_color = Color.WHITE
+     elif tint.r > 0.65 and tint.g > 0.65: paint.albedo_color = Color("aabac9")
      elif tint.b > tint.r*1.4: paint.albedo_color = Color("235b9e")
      elif tint.r > tint.b*1.4: paint.albedo_color = Color("b93d47")
     else:

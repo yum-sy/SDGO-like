@@ -22,6 +22,7 @@ var touch_visible: bool:
 
 func clear() -> void:
 	stick_id = -1
+	move = Vector2.ZERO
 	look_id = -1
 	touch_move = Vector2.ZERO
 	touches.clear()
@@ -88,17 +89,19 @@ func _input(event: InputEvent) -> void:
 			if not handled:
 				if event.position.x < size.x*0.35 and event.position.y > size.y*0.45 and stick_id == -1:
 					stick_id = event.index
-					stick_origin = event.position
+					stick_origin = event.position.clamp(Vector2(80+Layout.safe.x,80+Layout.safe.y),size-Vector2(80+Layout.safe.z,80+Layout.safe.w))
 				elif look_id == -1:
 					look_id = event.index
 	if event is InputEventScreenDrag:
 		if event.index == stick_id:
-			touch_move = ((event.position-stick_origin)/65.0).limit_length()
+			var displacement: Vector2 = (event.position-stick_origin)/80.0
+			var strength := clampf((displacement.length()-0.12)/0.88,0.0,1.0)
+			touch_move = displacement.normalized()*strength
 		if event.index == look_id:
-			look += event.relative*0.004
-		elif touches.get(event.index, "") == "fire":
+			look += event.relative*0.004*720.0/size.y
+		elif touches.get(event.index, "") in ["fire","boost"]:
 			# Right thumb aims while holding fire; left thumb keeps moving.
-			look += event.relative*0.003
+			look += event.relative*0.003*720.0/size.y
 func held(action: String) -> bool:
 	return action in touches.values()
 func sample() -> Dictionary:

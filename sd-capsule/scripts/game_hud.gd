@@ -3,6 +3,7 @@ const Layout = preload("res://scripts/control_layout.gd")
 var game: Node3D
 const DamageGauge = preload("res://scripts/damage_gauge.gd")
 var health_gauges := {}
+var redraw_clock := 0.0
 var font: Font = ThemeDB.fallback_font
 const INK = Color(0.87,0.94,1)
 const MINT = Color(0.35,1,0.8)
@@ -13,7 +14,10 @@ func _process(delta: float) -> void:
 			if not health_gauges.has(key): health_gauges[key] = DamageGauge.new()
 			var maximum: float = 100.0 if actor == game.unit else float(actor.max_hp)
 			health_gauges[key].update(actor.hp/maximum,delta if game.mode == "playing" else 0)
-	queue_redraw()
+	redraw_clock += delta
+	if not is_instance_valid(game) or not game.low_quality or redraw_clock >= 1.0/30.0:
+		redraw_clock = 0
+		queue_redraw()
 func health_bar(at: Vector2, width: float, actor: Node, tint: Color) -> void:
 	var maximum: float = 100.0 if actor == game.unit else float(actor.max_hp)
 	var ratio: float = actor.hp/maximum
@@ -131,17 +135,24 @@ func _draw() -> void:
 			for axis in [Vector2(1,1),Vector2(-1,1)]: draw_line(center-axis*12,center+axis*12,Color.WHITE,2)
 		if pilot.touch_visible:
 			var origin: Vector2 = Vector2(135+Layout.safe.x,size.y-135-Layout.safe.w) if pilot.stick_id == -1 else pilot.stick_origin
-			draw_circle(origin,65,Color(0.5,0.8,1,0.16))
-			draw_arc(origin,65,0,TAU,32,Color(0.7,0.9,1,0.5),2)
-			draw_circle(origin+pilot.touch_move*50,24,Color(0.7,0.9,1,0.5))
+			draw_circle(origin,80,Color(0.5,0.8,1,0.16))
+			draw_arc(origin,80,0,TAU,32,Color(0.7,0.9,1,0.5),2)
+			draw_circle(origin+pilot.touch_move*60,24,Color(0.7,0.9,1,0.5))
 			var buttons := Layout.buttons(size)
 			for action in buttons:
 				var rect: Rect2 = buttons[action]
 				var active: bool = pilot.held(action)
-				draw_rect(rect,Color(0.1,0.5,0.65,0.65) if active else Color(0.1,0.2,0.3,0.48))
-				draw_rect(rect,Color(0.6,0.85,1,0.4),false,1)
+				var accent := Color("ef9dc7") if action == "melee" else (MINT if action == "fire" else Color("9ac9ed"))
+				if action in ["fire","melee","boost","dash"]:
+					var radius: float = rect.size.x*0.5
+					draw_circle(rect.get_center(),radius,Color(0.1,0.4,0.5,0.8) if active else Color(0.04,0.1,0.17,0.65))
+					draw_arc(rect.get_center(),radius-2,0,TAU,32,accent if active else Color(accent,0.65),2)
+				else:
+					draw_rect(rect,Color(0.1,0.4,0.5,0.8) if active else Color(0.04,0.1,0.17,0.5))
+					draw_rect(rect,Color(accent,0.4),false,1)
 				var label: String = {"cycle":"TARGET","weapon":"SWAP","aim":"AUTO ON" if battle.auto_aim else "FREE AIM"}.get(action,action.to_upper())
-				text(rect.position+Vector2(12,rect.size.y*0.5+6),label,20)
+				var label_width := font.get_string_size(label,HORIZONTAL_ALIGNMENT_LEFT,-1,20).x
+				text(rect.get_center()+Vector2(-label_width*0.5,6),label,20,accent)
 				var button_progress := -1.0
 				if action == "fire" and rifle.reload_left > 0: button_progress = 1-rifle.reload_left/rifle.RELOAD_TIME
 				elif action == "melee" and battle.attack.running: button_progress = battle.attack.elapsed/battle.attack.duration()

@@ -11,8 +11,8 @@ static func build(rig: Node3D) -> void:
  rig.add_child(face)
  for side in [-1,1]:
   var eye_x: float = -0.111+side*0.112
-  face_patch(face,faces,"EyeSocket"+str(side),Vector2(eye_x,1.565),Vector2(0.175,0.065),side*0.10,Color("182831"),0.006,false)
-  face_patch(face,faces,"Eye"+str(side),Vector2(eye_x,1.57),Vector2(0.135,0.028),side*0.10,Color("e9e788"),0.010,true)
+  face_patch(face,faces,"EyeSocket"+str(side),Vector2(eye_x,1.565),Vector2(0.205,0.085),side*0.10,Color("182831"),0.006,false)
+  face_patch(face,faces,"Eye"+str(side),Vector2(eye_x,1.57),Vector2(0.162,0.043),side*0.10,Color("fff36a"),0.010,true)
   kit.block(face,"MaskVent",Vector3(0.018,0.072,0.014),Vector3(-0.111+side*0.037,1.335,0.317),Color("344653"))
  kit.block(face,"Chin",Vector3(0.105,0.10,0.032),Vector3(-0.111,1.23,0.316),Color("b5303c"))
  kit.block(face,"ForeheadCamera",Vector3(0.075,0.045,0.024),Vector3(-0.111,1.802,0.195),Color("67cdb5"))

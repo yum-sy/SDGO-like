@@ -20,7 +20,8 @@ var arm: SpringArm3D
 var hud: Control
 var sounds: Node
 var mode := "ready"
-var low_quality := false
+var low_quality := DisplayServer.is_touchscreen_available()
+var lifecycle_epoch := 0
 var best_time := 0.0
 var saved_result := false
 var fps_samples: Array[float] = []
@@ -72,7 +73,7 @@ func _ready() -> void:
 	if config.load("user://settings.cfg") == OK:
 		best_time = config.get_value("record",rules.record_key()+"_time",0.0)
 		best_score = config.get_value("record",rules.record_key()+"_score",0)
-		low_quality = config.get_value("settings","low_quality",false)
+		low_quality = config.get_value("settings","low_quality",low_quality)
 	var environment := WorldEnvironment.new()
 	var settings := Environment.new()
 	settings.background_mode = Environment.BG_SKY
@@ -207,8 +208,9 @@ func update_player_visibility() -> void:
 	if distance < 1.5: unit.visual.visible = false
 	elif distance > 1.9: unit.visual.visible = true
 func apply_quality() -> void:
+	Engine.max_fps = 60
 	if is_instance_valid(key_light): key_light.shadow_enabled = not low_quality
-	get_viewport().scaling_3d_scale = 0.65 if low_quality else 1.0
+	get_viewport().scaling_3d_scale = 0.8 if low_quality else 1.0
 	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if low_quality else Viewport.MSAA_2X
 	get_viewport().mesh_lod_threshold = 3.0 if low_quality else 1.5
 func save_settings() -> void:
@@ -235,6 +237,11 @@ func _process(delta: float) -> void:
 		unit.visual.visible = true
 	if OS.has_feature("web"):
 		overlay_open = bool(JavaScriptBridge.eval("!!window.capsuleOverlayOpen"))
+		var epoch := int(JavaScriptBridge.eval("window.capsuleLifecycleEpoch || 0"))
+		if epoch != lifecycle_epoch:
+			lifecycle_epoch = epoch
+			pilot.clear()
+			if mode == "playing": mode = "paused"
 	if overlay_open and mode == "playing":
 		mode = "paused"
 		pilot.clear()

@@ -281,3 +281,13 @@ Gundam eyes are projected onto source face triangles; mask vents, chin, forehead
 Validated at 844x390 and 390x844 browser sizes, including install help, web continuation, movement and saber recovery. Native device installation and physical-phone performance remain unverified.
 
 Validation: 200 headless checks, installation lifecycle tests and offline PWA package tests passed.
+
+## Painted RX-78-2 and mobile handling / 2026-11-15
+
+Baked regional vertex colors now distinguish red boots, dark soles, white shins/skirt armor, red forehead crest, white shield border and gold shield emblem. Horizontal paint boundaries split triangles during preparation, avoiding interpolated color bleeding and diagonal patches. Original GLB and credits remain intact; generated runtime mesh keeps its existing rigid joints. Eyes and dark sockets are larger and higher contrast for small screens.
+
+Touch movement has a 12% dead zone, 80-unit full-travel radius and safe-area-clamped floating origin. FIRE and BOOST drags can rotate the camera while movement retains a separate finger. Major actions have round, color-coded controls with centered labels. Web menu actions meet a 44px minimum on coarse pointers. Backgrounding, restored page navigation and orientation changes request an explicit pause and clear held input; returning never silently resumes combat.
+
+First-time touchscreen users default to LOW (80% 3D resolution, no MSAA/directional shadows). Explicit quality choices remain persisted. Rendering is capped at 60 FPS; LOW HUD redraw runs at up to 30 Hz while input/physics remain 60 Hz.
+
+Validation: 207 headless checks, installation lifecycle, background/rotation lifecycle and offline PWA tests passed. Browser checked 844x390 and 667x375 combat layouts, firing and pause, and quality setting persistence after reload. Desktop-hosted low-quality browser showed 60 FPS / rolling average 55 during this short check, not a phone benchmark. Multi-touch ownership was tested with synthesized Godot touch events. Actual Android/iOS home-screen installation, OS-level relaunch, sustained thermal performance and physical touch latency remain unverified without a connected phone.

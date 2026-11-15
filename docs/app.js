@@ -5,7 +5,6 @@
   const safe = () => { const css=getComputedStyle(probe); window.capsuleSafeInsets=[css.paddingLeft,css.paddingTop,css.paddingRight,css.paddingBottom].map(v=>parseFloat(v)||0); };
   safe(); window.addEventListener('resize',safe);
   const note = document.getElementById('pwa-note');
-  const install = document.getElementById('install');
   const update = document.getElementById('update');
   const canvas = document.getElementById('canvas');
   const toolbox = document.getElementById('web-tools');

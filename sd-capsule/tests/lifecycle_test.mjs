@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const events={}, docEvents={}, orientation={};
+const window={addEventListener:(k,f)=>events[k]=f};
+const document={hidden:false,addEventListener:(k,f)=>docEvents[k]=f};
+vm.runInNewContext(fs.readFileSync(new URL('../web/lifecycle.js',import.meta.url),'utf8'),{window,document,screen:{orientation:{addEventListener:(k,f)=>orientation[k]=f}}});
+assert.equal(window.capsuleLifecycleEpoch,0);
+docEvents.visibilitychange(); assert.equal(window.capsuleLifecycleEpoch,0);
+document.hidden=true; docEvents.visibilitychange(); assert.equal(window.capsuleLifecycleEpoch,1);
+events.pagehide(); events.pageshow({persisted:true}); orientation.change();
+assert.equal(window.capsuleLifecycleEpoch,4);
+events.pageshow({persisted:false});assert.equal(window.capsuleLifecycleEpoch,4);
+console.log('PASS lifecycle: background, restored page and rotation request safe pause; fresh launch stays ready');

@@ -33,7 +33,7 @@ handlers.fetch({request:{method:'GET',url:'https://example.test/game/index.pck',
 assert.equal(await pending,'new-build');
 handlers.fetch({request:{method:'GET',url:'https://example.test/game/',mode:'navigate'},respondWith(p){pending=p;}});
 assert.equal(await pending,'new-build');
-for (const file of ['showcase.html','showcase-preview.jpg','install.js','index.maskable-512.png','index.icon.png']) {
+for (const file of ['showcase.html','showcase-preview.jpg','install.js','lifecycle.js','index.maskable-512.png','index.icon.png']) {
  handlers.fetch({request:{method:'GET',url:'https://example.test/game/'+file,mode:'cors'},respondWith(p){pending=p;}});
  assert.equal(await pending,'new-build');
 }

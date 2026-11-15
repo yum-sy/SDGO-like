@@ -20,6 +20,7 @@ for name in ('showcase.html','showcase-preview.jpg'):
     source=root/'web'/name
     if source.exists(): (dist/name).write_bytes(source.read_bytes())
 (dist/'app.js').write_text((root/'web/app.js').read_text())
+(dist/'lifecycle.js').write_text((root/'web/lifecycle.js').read_text())
 (dist/'install.js').write_text((root/'web/install.js').read_text())
 (dist/'CREDITS.txt').write_text((root/'CREDITS.txt').read_text())
 (dist/'.nojekyll').touch()
