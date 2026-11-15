@@ -245,8 +245,11 @@ func _process(delta: float) -> void:
 		if epoch != lifecycle_epoch:
 			lifecycle_epoch = epoch
 			pilot.clear()
-			if mode == "playing": mode = "paused"
+			if mode == "playing":
+				unit.focus_yaw = NAN
+				mode = "paused"
 	if overlay_open and mode == "playing":
+		unit.focus_yaw = NAN
 		mode = "paused"
 		pilot.clear()
 	safe_clock += delta
@@ -286,8 +289,10 @@ func _physics_process(delta: float) -> void:
 		apply_quality()
 		save_settings()
 	if command.suspend and mode == "playing":
+		unit.focus_yaw = NAN
 		mode = "paused"
 	if command.pause and mode in ["playing","paused"]:
+		unit.focus_yaw = NAN
 		mode = "paused" if mode == "playing" else "playing"
 		pilot.clear()
 	if mode in ["ready","paused"] and command.restart:

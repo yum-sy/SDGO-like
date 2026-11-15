@@ -106,7 +106,7 @@ func run() -> void:
 	battle.step({"fire":true},0.01)
 	check(battle.rifle.ammo == ammo_before,"rifle cannot fire backward during camera acquisition")
 	var command := {"move":Vector2.ZERO,"look":Vector2.ZERO,"jump":false,"boost":false,"dash":false}
-	for i in range(45): player.simulate(command,1.0/60)
+	for i in range(90): player.simulate(command,1.0/60) # 180-degree turn is now speed-limited.
 	check(is_nan(player.focus_yaw) and absf(angle_difference(player.yaw,PI)) < 0.02,"manual camera acquisition converges smoothly")
 	player.focus_yaw = 0
 	command.look = Vector2(0.1,0)
@@ -114,7 +114,6 @@ func run() -> void:
 	check(is_nan(player.focus_yaw),"manual mouse movement cancels assisted camera turn")
 	player.yaw = 0
 	scene.update_camera()
-	battle.manual_target_left = 0.3
 	battle.update_target(false)
 	check(battle.selected == null,"cancelling camera assist also releases offscreen lock")
 	scene.queue_free()

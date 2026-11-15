@@ -5,6 +5,12 @@ var look := Vector2.ZERO
 var jump := false
 var stick_id := -1
 var look_id := -1
+# One camera owner, regardless of whether the gesture starts on FIRE/BOOST/scene.
+var camera_touch_id := -1
+var touch_positions := {}
+var camera_travel := {}
+const CAMERA_DEAD_ZONE := 12.0
+const TOUCH_LOOK_GAIN := 0.003
 var stick_origin := Vector2.ZERO
 var touch_move := Vector2.ZERO
 var touches := {}
@@ -24,6 +30,9 @@ func clear() -> void:
 	stick_id = -1
 	move = Vector2.ZERO
 	look_id = -1
+	camera_touch_id = -1
+	touch_positions.clear()
+	camera_travel.clear()
 	touch_move = Vector2.ZERO
 	touches.clear()
 	queued.clear()
@@ -35,6 +44,7 @@ func clear() -> void:
 	jump = false
 func _input(event: InputEvent) -> void:
 	var size := get_viewport().get_visible_rect().size
+	if event is InputEventMouse and (event.device == InputEvent.DEVICE_ID_EMULATION or not touch_positions.is_empty()): return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_SPACE: jump = true
@@ -68,6 +78,11 @@ func _input(event: InputEvent) -> void:
 			look += event.relative * 0.0025
 	if event is InputEventScreenTouch:
 		if not event.pressed:
+			touch_positions.erase(event.index)
+			camera_travel.erase(event.index)
+			if event.index == camera_touch_id:
+				camera_touch_id = -1
+				camera_travel.clear()
 			touches.erase(event.index)
 			if event.index == stick_id:
 				stick_id = -1
@@ -77,6 +92,8 @@ func _input(event: InputEvent) -> void:
 		elif menu_open:
 			menu_press(event.position)
 		else:
+			touch_positions[event.index] = event.position
+			camera_travel[event.index] = Vector2.ZERO
 			var handled := false
 			var buttons := Layout.buttons(size)
 			for action in buttons:
@@ -87,21 +104,39 @@ func _input(event: InputEvent) -> void:
 					handled = true
 					break
 			if not handled:
-				if event.position.x < size.x*0.35 and event.position.y > size.y*0.45 and stick_id == -1:
-					stick_id = event.index
-					stick_origin = event.position.clamp(Vector2(80+Layout.safe.x,80+Layout.safe.y),size-Vector2(80+Layout.safe.z,80+Layout.safe.w))
+				if event.position.x < size.x*0.35 and event.position.y > size.y*0.45:
+					if stick_id == -1:
+						stick_id = event.index
+						stick_origin = event.position.clamp(Vector2(80+Layout.safe.x,80+Layout.safe.y),size-Vector2(80+Layout.safe.z,80+Layout.safe.w))
 				elif look_id == -1:
 					look_id = event.index
 	if event is InputEventScreenDrag:
+		if not touch_positions.has(event.index) or menu_open: return
+		var previous: Vector2 = touch_positions[event.index]
+		touch_positions[event.index] = event.position
 		if event.index == stick_id:
 			var displacement: Vector2 = (event.position-stick_origin)/80.0
 			var strength := clampf((displacement.length()-0.12)/0.88,0.0,1.0)
 			touch_move = displacement.normalized()*strength
-		if event.index == look_id:
-			look += event.relative*0.004*720.0/size.y
-		elif touches.get(event.index, "") in ["fire","boost"]:
-			# Right thumb aims while holding fire; left thumb keeps moving.
-			look += event.relative*0.003*720.0/size.y
+			return
+		if event.index != look_id and not touches.get(event.index, "") in ["fire","boost"]: return
+		# Derive motion from this finger's absolute positions, never another finger's
+		# last relative event. Ignore discontinuities from canceled/resized gestures.
+		var motion: Vector2 = event.position-previous
+		if motion.length() > size.y*0.25:
+			camera_travel[event.index] = Vector2.ZERO
+			return
+		if camera_touch_id != -1 and camera_touch_id != event.index:
+			camera_travel[event.index] = Vector2.ZERO
+			return
+		if camera_touch_id == -1:
+			var travel: Vector2 = camera_travel.get(event.index,Vector2.ZERO)+motion
+			camera_travel[event.index] = travel
+			if travel.length() <= CAMERA_DEAD_ZONE: return
+			camera_touch_id = event.index
+			motion = travel-travel.normalized()*CAMERA_DEAD_ZONE
+		look += motion*TOUCH_LOOK_GAIN*720.0/size.y
+
 func held(action: String) -> bool:
 	return action in touches.values()
 func sample() -> Dictionary:

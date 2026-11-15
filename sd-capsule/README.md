@@ -309,3 +309,13 @@ Removed those forehead overlays. The original recessed backing triangles are now
 Reference checks: Sketchfab public v3 model metadata confirmed download-enabled status for the existing nickqd Rx78, Ripjet's RX-78-2 Gundam Low-Poly (654a4ace05ba42359009ba732cf54fcb, BY-NC, no animations), and nama_140's RX-78-2 (8b1ec0f948984aa897e60b63a13b501c, BY, one animation). Metadata access does not itself obtain authenticated download archives; no replacement assets were downloaded/imported. Compared Ripjet's viewer and Bandai's BB Senshi No.200 official reference (https://p-bandai.jp/item/item-1000130852/) for eye/face placement. Capsule Fighter reference searches were supplemental and no ripped game asset was used.
 
 New geometry tests assert eye height, per-vertex depth against the actual source surface, and dark vertex colors on the original cavity triangles. 210 headless checks passed. Reproducible front/30-degree head review uses tools/render_head_review.gd; browser checked the game camera at 1280x720 and 844x390 with no console errors.
+
+## Mobile camera input arbitration / 2026-11-15
+
+Camera gestures now have one owning touch across scene/FIRE/BOOST drags. Each finger tracks its own absolute positions; inconsistent relative-event deltas, emulated mouse duplicates, joystick-region extra touches and large coordinate discontinuities cannot add rotation. A 12-unit gesture dead zone prevents holding-button jitter from canceling TARGET recentering. Ownership release discards pending motion from other fingers, and pause clears gesture history.
+
+All touch camera gestures use the same sensitivity. TARGET recentering is capped at 3 radians/second, holds the selected target throughout the turn and cancels when that target is lost/dead. A deliberate manual gesture wins even when TARGET is tapped in the same tick. Target auto-selection and mech visual facing remain independent from camera orientation. Pause/background/menu entry cancels unfinished recentering.
+
+Validation: synthetic multi-touch regression checks cover conflicting fingers, jitter, ownership handoff, bogus relative data, duplicate mouse input, jump suppression, joystick isolation, bounded recenter and manual priority. Browser at 844x390 checked TARGET acquisition then movement/shooting without a camera reset and with no console errors. These are desktop-browser and synthesized input checks; the reported physical-phone session was not directly reproduced on connected hardware.
+
+Final checks: 222 game assertions plus web tools, installation, lifecycle and offline PWA tests passed.

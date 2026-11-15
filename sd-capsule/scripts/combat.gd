@@ -9,7 +9,6 @@ var melee_buffer := 0.0
 var melee_was_held := false
 var rifle := Rifle.new()
 var targets: Array = []
-var manual_target_left := 0.0
 var selected: Node3D
 var player: CharacterBody3D
 var camera: Camera3D
@@ -68,7 +67,6 @@ func update_target(cycle: bool) -> void:
 			selected = available[(available.find(selected)+1)%available.size()]
 			var offset: Vector3 = selected.global_position-player.global_position
 			player.focus_yaw = atan2(-offset.x,-offset.z)
-			manual_target_left = 0.35
 			return
 		# A blocked target can still be located, but never receives a through-wall lock.
 		var hidden: Array = targets.filter(func(t): return t.hp > 0 and player.global_position.distance_to(t.global_position) <= RANGE)
@@ -79,9 +77,11 @@ func update_target(cycle: bool) -> void:
 			selected = null
 			announce("TARGET BEHIND COVER / REPOSITION OR BOOST")
 			return
-	if manual_target_left > 0 and not is_nan(player.focus_yaw) and is_instance_valid(selected) and selected.hp > 0:
+	if not is_nan(player.focus_yaw) and is_instance_valid(selected):
 		var sight := ray(player.aim_point(),selected.aim_point())
-		if player.global_position.distance_to(selected.global_position) <= RANGE and not sight.is_empty() and sight.collider == selected: return
+		if selected.hp > 0 and player.global_position.distance_to(selected.global_position) <= RANGE and not sight.is_empty() and sight.collider == selected: return
+		# A lost/dead target must not keep turning the view while a new lock appears.
+		player.focus_yaw = NAN
 	var candidates: Array = []
 	for target in targets:
 		if eligible(target):
@@ -101,7 +101,6 @@ func step(command: Dictionary, delta: float) -> void:
 		return
 	elapsed += delta
 	notice_left = maxf(0,notice_left-delta)
-	manual_target_left = maxf(0,manual_target_left-delta)
 	camera_trauma = move_toward(camera_trauma,0,delta*3)
 	for popup in damage_popups: popup.life -= delta
 	damage_popups = damage_popups.filter(func(p): return p.life > 0)
@@ -123,6 +122,8 @@ func step(command: Dictionary, delta: float) -> void:
 		selected = null
 		announce("TARGET ASSIST ON" if auto_aim else "FREE AIM / SHOOT COVER")
 	update_target(command.get("cycle",false))
+	# A deliberate manual gesture wins even if TARGET is tapped in the same tick.
+	if command.get("look",Vector2.ZERO).length_squared() > 0: player.focus_yaw = NAN
 	if command.get("weapon",false):
 		weapon = 1-weapon
 	player.rig.saber_equipped = weapon == 1

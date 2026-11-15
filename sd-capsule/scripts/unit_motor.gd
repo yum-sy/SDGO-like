@@ -39,7 +39,8 @@ func simulate(command: Dictionary, delta: float) -> void:
 		return
 	if command.look.length() > 0: focus_yaw = NAN
 	if not is_nan(focus_yaw):
-		yaw = lerp_angle(yaw,focus_yaw,1-exp(-14*delta))
+		var turn := angle_difference(yaw,focus_yaw)
+		yaw += clampf(turn,-3.0*delta,3.0*delta)
 		if absf(angle_difference(yaw,focus_yaw)) < 0.01: focus_yaw = NAN
 	yaw -= command.look.x
 	pitch = clampf(pitch - command.look.y, -0.9, 0.45)

@@ -32,6 +32,7 @@ func run():
  pilot._input(press)
  drag.index = 1
  drag.relative = Vector2(30,0)
+ drag.position = press.position+drag.relative
  pilot._input(drag)
  var command = pilot.sample()
  check(command.boost and command.look.x > 0 and command.move.x > 0,"move boost and camera remain independent simultaneous touches")
