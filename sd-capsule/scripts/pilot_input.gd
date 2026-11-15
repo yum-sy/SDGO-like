@@ -2,10 +2,12 @@ extends Node
 const Layout = preload("res://scripts/control_layout.gd")
 var move := Vector2.ZERO
 var look := Vector2.ZERO
+var look_is_touch := false
 var jump := false
 var stick_id := -1
 var look_id := -1
-# One camera owner, regardless of whether the gesture starts on FIRE/BOOST/scene.
+# Only a gesture STARTED on empty space may own the camera.
+# Button and joystick fingers retain their roles until release.
 var camera_touch_id := -1
 var touch_positions := {}
 var camera_travel := {}
@@ -41,6 +43,7 @@ func clear() -> void:
 	mouse_fire = false
 	mouse_melee = false
 	look = Vector2.ZERO
+	look_is_touch = false
 	jump = false
 func _input(event: InputEvent) -> void:
 	var size := get_viewport().get_visible_rect().size
@@ -119,7 +122,7 @@ func _input(event: InputEvent) -> void:
 			var strength := clampf((displacement.length()-0.12)/0.88,0.0,1.0)
 			touch_move = displacement.normalized()*strength
 			return
-		if event.index != look_id and not touches.get(event.index, "") in ["fire","boost"]: return
+		if event.index != look_id: return
 		# Derive motion from this finger's absolute positions, never another finger's
 		# last relative event. Ignore discontinuities from canceled/resized gestures.
 		var motion: Vector2 = event.position-previous
@@ -136,17 +139,19 @@ func _input(event: InputEvent) -> void:
 			camera_touch_id = event.index
 			motion = travel-travel.normalized()*CAMERA_DEAD_ZONE
 		look += motion*TOUCH_LOOK_GAIN*720.0/size.y
+		look_is_touch = true
 
 func held(action: String) -> bool:
 	return action in touches.values()
 func sample() -> Dictionary:
 	move = Vector2(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W))) if active else Vector2.ZERO
 	move = (move+touch_move).limit_length()
-	var command := {"move":move,"look":look,"jump":jump,"boost":held("boost") or (active and Input.is_physical_key_pressed(KEY_SPACE)),"dash":held("dash") or (active and Input.is_physical_key_pressed(KEY_SHIFT)),"fire":queued.get("fire",false) or mouse_fire or left_down or held("fire") or (active and Input.is_physical_key_pressed(KEY_F)),"melee":queued.get("melee",false) or mouse_melee or right_down or held("melee") or (active and Input.is_physical_key_pressed(KEY_V))}
+	var command := {"move":move,"look":look,"touch_look":look_is_touch,"jump":jump,"boost":held("boost") or (active and Input.is_physical_key_pressed(KEY_SPACE)),"dash":held("dash") or (active and Input.is_physical_key_pressed(KEY_SHIFT)),"fire":queued.get("fire",false) or mouse_fire or left_down or held("fire") or (active and Input.is_physical_key_pressed(KEY_F)),"melee":queued.get("melee",false) or mouse_melee or right_down or held("melee") or (active and Input.is_physical_key_pressed(KEY_V))}
 	for action in ["reload","cycle","weapon","restart","pause","mute","quality","suspend","arena","difficulty","aim"]:
 		command[action] = queued.get(action,false)
 	queued.clear()
 	look = Vector2.ZERO
+	look_is_touch = false
 	jump = false
 	mouse_fire = false
 	mouse_melee = false

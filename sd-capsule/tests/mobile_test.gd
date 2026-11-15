@@ -35,7 +35,7 @@ func run():
  drag.position = press.position+drag.relative
  pilot._input(drag)
  var command = pilot.sample()
- check(command.boost and command.look.x > 0 and command.move.x > 0,"move boost and camera remain independent simultaneous touches")
+ check(command.boost and command.look == Vector2.ZERO and command.move.x > 0,"move and boost do not rotate camera")
  pilot._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
  command = pilot.sample()
  check(not command.boost and command.move == Vector2.ZERO and command.look == Vector2.ZERO and command.suspend,"backgrounding clears all input and requests pause")

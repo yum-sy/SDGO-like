@@ -60,7 +60,7 @@ func run() -> void:
  drag.position = press.position+drag.relative
  pilot._input(drag)
  var command = pilot.sample()
- check(command.fire and command.look.length() > 0,"fire thumb drag aims without releasing fire")
+ check(command.fire and command.look == Vector2.ZERO,"fire thumb drag preserves fire without rotating camera")
  press.pressed = false
  pilot._input(press)
  check(not pilot.sample().fire,"fire release clears aim-and-fire ownership")

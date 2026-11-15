@@ -50,7 +50,7 @@ func run():
  drag(p,1,fire+Vector2(-42,20))
  check(p.sample().look==Vector2.ZERO,"camera handoff discards movement accumulated by other fingers")
  drag(p,1,fire+Vector2(-62,20))
- check(p.sample().look.x<0 and p.camera_touch_id==1,"remaining fire finger can deliberately take over after dead zone")
+ check(p.sample().look==Vector2.ZERO and p.camera_touch_id==-1,"fire finger never takes over camera after look finger releases")
  drag(p,1,fire+Vector2(-62,-size.y))
  check(p.sample().look==Vector2.ZERO,"discontinuous touch coordinates do not spin camera")
  p.clear()
@@ -68,6 +68,18 @@ func run():
  game.unit.simulate(idle,1.0/60)
  game.combat.step({"look":Vector2(0.08,0),"cycle":true},1.0/60)
  check(is_nan(game.unit.focus_yaw),"intentional drag wins over target recenter even in the same tick")
+ idle.look=Vector2(100,-100)
+ idle.touch_look=true
+ var before_yaw: float=game.unit.yaw
+ var before_pitch: float=game.unit.pitch
+ game.unit.simulate(idle,1.0/60)
+ var angular_step:=Vector2(game.unit.yaw-before_yaw,game.unit.pitch-before_pitch).length()
+ print("CAMERA burst angular step degrees: ",rad_to_deg(angular_step))
+ check(angular_step<=PI/60+0.0001,"coalesced touch burst cannot rotate more than 3 degrees per 60Hz tick")
+ idle.look=Vector2.ZERO
+ before_yaw=game.unit.yaw
+ game.unit.simulate(idle,1.0/60)
+ check(is_equal_approx(game.unit.yaw,before_yaw),"no camera backlog remains when touch stops")
  var yaw: float=game.unit.yaw
  var pitch: float=game.unit.pitch
  for i in range(30):

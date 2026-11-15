@@ -28,7 +28,7 @@ static func draw(h: Control) -> void:
 		h.text(Vector2(x+18,top+266),"Defeat three specialist Zaku units.",23,INK)
 		h.text(Vector2(x+18,top+292),"Rifle at range. Saber up close. Dash out of danger.",16,MUTED)
 		h.text(Vector2(x,top+350),"01  MOVE       02  LOCK & FIRE       03  CLOSE & STRIKE",14,ACCENT)
-		h.text(Vector2(x,top+377),"LEFT STICK       FIRE + DRAG              TAP MELEE" if touch else "WASD / stick     LMB / FIRE                 RMB / MELEE",15,MUTED)
+		h.text(Vector2(x,top+377),"LEFT STICK       HOLD FIRE                 TAP MELEE" if touch else "WASD / stick     LMB / FIRE                 RMB / MELEE",15,MUTED)
 		var right := size.x-380-Layout.safe.z
 		h.text(Vector2(right,size.y-185),"RX-78-2",36,INK)
 		h.text(Vector2(right,size.y-154),"GENERAL PURPOSE / CLOSE COMBAT",12,ACCENT)
@@ -61,7 +61,7 @@ static func draw(h: Control) -> void:
 		h.text(Vector2(x,top+76),"TAKE A BREATHER.",38,INK)
 		h.text(Vector2(x,top+116),"Your sortie resumes exactly where you left it.",18,MUTED)
 		var lines := ["WASD   Move     /     Hold mouse button + drag to look","LMB / F   Rifle     /     RMB / V   Saber combo","SPACE   Jump & boost     /     SHIFT   Dash","TAB   Find target     /     R   Reload","Q / E   Switch weapon     /     C   Free aim"]
-		if touch: lines = ["LEFT STICK   Move", "FIRE + DRAG   Shoot and aim", "BOOST + DRAG   Rise and turn", "MELEE   One tap, one swing", "DASH   Evade    /    TARGET   Find enemy"]
+		if touch: lines = ["LEFT STICK   Move", "FIRE / BOOST   Shoot / Rise", "EMPTY SPACE DRAG   Turn camera", "MELEE   One tap, one swing", "DASH   Evade    /    TARGET   Find enemy"]
 		for i in range(lines.size()): h.text(Vector2(x,top+174+i*34),lines[i],17,INK)
 		h.text(Vector2(x,top+372),"DISPLAY  %d FPS   /   AVG %d" % [Engine.get_frames_per_second(),g.average_fps],14,MUTED)
 	var buttons := Layout.menu_buttons(size)

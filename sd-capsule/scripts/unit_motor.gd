@@ -42,8 +42,13 @@ func simulate(command: Dictionary, delta: float) -> void:
 		var turn := angle_difference(yaw,focus_yaw)
 		yaw += clampf(turn,-3.0*delta,3.0*delta)
 		if absf(angle_difference(yaw,focus_yaw)) < 0.01: focus_yaw = NAN
-	yaw -= command.look.x
-	pitch = clampf(pitch - command.look.y, -0.9, 0.45)
+	var look_delta: Vector2 = command.look
+	if command.get("touch_look",false):
+		# Bound coalesced/stalled browser input; discard excess instead of replaying
+		# a backlog after the finger stops. 180 degrees/second maximum.
+		look_delta = look_delta.limit_length(PI*minf(delta,1.0/30.0))
+	yaw -= look_delta.x
+	pitch = clampf(pitch - look_delta.y, -0.9, 0.45)
 	var direction := Basis(Vector3.UP, yaw) * Vector3(command.move.x, 0, command.move.y)
 	dash_cooldown = maxf(0,dash_cooldown-delta)
 	dash_left = maxf(0,dash_left-delta)
