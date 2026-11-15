@@ -64,6 +64,7 @@ func _ready() -> void:
 			if "hand_lengan" in key and joint_sides[key] == side_name: arm = joints[key]
 			if ("hand_" + side_name + "__") in key:
 				hand_center = joints[key].get_child(0).get_aabb().get_center()
+				hand_center.y -= 0.18 # fist sits below the forearm, not inside it
 		if arm == null: continue
 		for key in joints:
 			if joint_sides[key] != side_name or "leg_" in key or joints[key] == arm: continue
@@ -72,8 +73,10 @@ func _ready() -> void:
 			part.reparent(arm)
 			if "armor_gun" in key:
 				part.position.x += hand_center.x - part.get_aabb().get_center().x
+				part.position.y -= 0.18
 			elif "armor_shield" in key:
-				part.position.x += hand_center.x + 0.10 - part.get_aabb().get_center().x
+				part.position.x += hand_center.x + 0.22 - part.get_aabb().get_center().x
+				part.position.y -= 0.18
 			old.queue_free()
 			joints[key] = arm
 			joint_rest[key] = arm.position
@@ -82,15 +85,7 @@ func _ready() -> void:
 		socket.position = hand_center - arm.position
 		if side_name == gun_side: hand_socket = socket
 		else: shield_mount = socket
-		# Compact gauntlet bridges the original tapered hand to its weapon grip.
-		var fist := MeshInstance3D.new()
-		var block := BoxMesh.new()
-		block.size = Vector3(0.19,0.16,0.20)
-		fist.mesh = block
-		var glove := StandardMaterial3D.new()
-		glove.albedo_color = Color("344454")
-		fist.material_override = glove
-		socket.add_child(fist)
+		build_hand(socket,side_name)
 	saber = MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = 0.045
@@ -129,6 +124,34 @@ func _ready() -> void:
 		flame.rotation.x = PI*0.5
 		add_child(flame)
 		thrusters.append(flame)
+func hand_block(parent: Node3D, label: String, size: Vector3, at: Vector3, color: String) -> void:
+	var part := MeshInstance3D.new()
+	part.name = label
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	part.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(color)
+	material.roughness = 0.6
+	part.material_override = material
+	part.position = at
+	parent.add_child(part)
+
+func build_hand(socket: Node3D, side_name: String) -> void:
+	# Readable closed mechanical fist: wrist, dorsal plate, curled fingers and thumb.
+	# Fingers surround a central grip channel shared by rifle and saber.
+	hand_block(socket,"Wrist",Vector3(0.14,0.13,0.14),Vector3(0,0.15,0),"657787")
+	hand_block(socket,"Palm",Vector3(0.25,0.18,0.16),Vector3(0,0,-0.04),"465969")
+	hand_block(socket,"BackPlate",Vector3(0.23,0.15,0.045),Vector3(0,0.01,-0.14),"9eafbc")
+	for finger in range(4):
+		var x := (finger-1.5)*0.064
+		hand_block(socket,"Knuckle%d" % finger,Vector3(0.054,0.095,0.085),Vector3(x,0.025,0.075),"8296a5")
+		hand_block(socket,"Finger%d" % finger,Vector3(0.054,0.065,0.105),Vector3(x,-0.058,0.06),"526879")
+	var inner := 1.0 if side_name == gun_side else -1.0
+	hand_block(socket,"Thumb",Vector3(0.07,0.135,0.09),Vector3(inner*0.151,0.01,0.04),"a3b3be")
+	if side_name != gun_side:
+		hand_block(socket,"ShieldHandle",Vector3(0.26,0.065,0.07),Vector3(0.13,0,0),"344454")
+
 func fire() -> void:
 	recoil = 1.0
 	aim_left = 0.65

@@ -234,3 +234,7 @@ Validation: all 11 headless test suites passed (153 checks); clean Compatibility
 Unified each arm under one shoulder transform and aligned the exploded source rifle/shield with the hand. Added compact gauntlets and a hand-local saber hilt; the blade stays attached throughout windup, strike and recovery. Melee now requires a fresh press; holding melee or saber-fire does not auto-repeat. A new press during the final 180 ms may buffer one next strike. Quick touch/mouse/key taps are retained between physics ticks. Updated in-game coaching and guide.
 
 Validation: 164 headless checks (including hand attachment, blade grip continuity, held melee/saber-fire and short touch tap regression), web export and PWA tests. Browser inspected weapon attachment and held-key recovery. Physical touchscreen validation remains pending.
+
+
+## Readable mechanical hands / 2026-11-15
+Moved the fist sockets below the original forearm geometry. Replaced the buried single block with a wrist, contrasting dorsal plate, four segmented curled fingers and mirrored thumb. Shifted weapons with the grip and exposed the shield hand using an outward mount and handle. Browser checked launch view and saber recovery; 164 headless checks and PWA tests passed.
