@@ -17,7 +17,9 @@ func run() -> void:
 	var rig = enemy.model
 	check(rig.joints.size() == 6,"Zaku has six independently articulated regions")
 	var mesh_count := 0
-	for joint in rig.joints.values(): mesh_count += joint.get_child_count()
+	for joint in rig.joints.values():
+		for part in joint.get_children():
+			if part is MeshInstance3D: mesh_count += 1
 	check(mesh_count == 58,"all 58 Zaku material-region meshes attached once")
 	rig.animate(Vector3(3,0,0),0,false,0.1)
 	check(absf(rig.joints.leg_L.rotation.x) > 0.1 and is_equal_approx(rig.joints.leg_L.rotation.x,-rig.joints.leg_R.rotation.x),"moving Zaku alternates legs")

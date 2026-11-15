@@ -238,3 +238,8 @@ Validation: 164 headless checks (including hand attachment, blade grip continuit
 
 ## Readable mechanical hands / 2026-11-15
 Moved the fist sockets below the original forearm geometry. Replaced the buried single block with a wrist, contrasting dorsal plate, four segmented curled fingers and mirrored thumb. Shifted weapons with the grip and exposed the shield hand using an outward mount and handle. Browser checked launch view and saber recovery; 164 headless checks and PWA tests passed.
+
+
+## Weapon handling and Zaku loadouts / 2026-11-15
+Gundam uses a higher rifle aiming stance and reduced armed walking sway; saber wrist/hand orientation now follows the hilt with a distinct ready guard. Runtime low-poly Zaku equipment includes a drum-fed machine gun, bazooka and heat hawk. Assault readies the axe, flanker carries the machine gun and support carries the bazooka; ranged/melee attacks select the corresponding held weapon. Enemy shots and muzzle flashes originate at the weapon muzzle. Existing damage, burst schedules and projectile behavior remain unchanged: bazooka splash damage is not implemented.
+Validation: 176 headless checks including per-role weapon attachment and switching; web export and PWA tests; browser checked close combat, firearm/saber handling and enemy weapon silhouettes without console errors. No physical mobile performance claim.

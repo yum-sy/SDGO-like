@@ -37,6 +37,7 @@ func _ready() -> void:
 	cooldown += target_number * 0.25
 	model = preload("res://assets/prepared/zaku.scn").instantiate()
 	model.set_script(preload("res://scripts/zaku_rig.gd"))
+	model.loadout_role = role
 	add_child(model)
 	var collider := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()

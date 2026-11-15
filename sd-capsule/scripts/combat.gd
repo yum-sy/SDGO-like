@@ -157,7 +157,8 @@ func enemy_shot(shooter: CharacterBody3D, point: Vector3) -> void:
 	var bolt := preload("res://scripts/enemy_bolt.gd").new()
 	bolt.shooter = shooter.get_rid()
 	add_child(bolt)
-	bolt.global_position = shooter.aim_point()
+	bolt.global_position = shooter.model.muzzle_position()
+	FX.spawn(self,bolt.global_position,Color(1,0.65,0.2),0.16)
 	bolt.velocity = (point-bolt.global_position).normalized()*(20 if shooter.veteran else 17)
 	sound("enemy")
 func cancel_melee() -> void:

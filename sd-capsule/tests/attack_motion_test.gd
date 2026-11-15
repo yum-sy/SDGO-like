@@ -75,6 +75,15 @@ func run() -> void:
 	pilot._input(tap)
 	check(pilot.sample().melee,"quick touch tap survives press and release between physics ticks")
 	check(not pilot.sample().melee,"quick touch tap is consumed exactly once")
+	for enemy in scene.combat.targets:
+		var enemy_rig = enemy.model
+		check(enemy_rig.weapon_socket.get_parent() == enemy_rig.joints.arm_R,"enemy weapon hand stays on its arm: " + enemy.role)
+		check(enemy_rig.weapon_label == ("BAZOOKA" if enemy.role == "SUPPORT" else "MACHINE GUN"),"role selects correct ranged weapon: " + enemy.role)
+		enemy_rig.fire()
+		check(enemy_rig.ranged_weapon.visible and not enemy_rig.heat_hawk.visible,"ranged shot exposes firing weapon: " + enemy.role)
+		enemy_rig.strike_phase = 0.5
+		enemy_rig.apply_strike_pose()
+		check(enemy_rig.heat_hawk.visible and not enemy_rig.ranged_weapon.visible,"melee equips heat hawk: " + enemy.role)
 	scene.queue_free()
 	await process_frame
 	print("FAILURES ",failures)

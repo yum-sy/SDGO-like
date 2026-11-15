@@ -171,16 +171,15 @@ func set_attack_pose(clock: RefCounted) -> void:
 func apply_blade_pose() -> void:
 	saber.visible = swing_left > 0 or saber_equipped
 	if is_instance_valid(weapon): weapon.visible = not saber.visible
-	if swing_left > 0:
-		# The same local arc is used by the authoritative swept hit test.
-		var direction := Vector3(sin(attack_angle),0,cos(attack_angle))
-		var local_direction: Vector3 = hand_socket.basis.inverse() * hand_socket.get_parent().basis.inverse() * direction
-		saber.position = local_direction*0.91
-		saber.basis = Basis(Quaternion(Vector3.UP,local_direction.normalized()))
+	if saber.visible:
+		var direction := Vector3(sin(attack_angle),0,cos(attack_angle)) if swing_left > 0 else Vector3(-0.25,0.65,0.72).normalized()
+		var local_direction: Vector3 = hand_socket.get_parent().basis.inverse() * direction
+		# Rotate the entire gripping hand with the hilt, not the blade alone.
+		hand_socket.basis = Basis(Quaternion(Vector3.UP,local_direction.normalized()))
+		saber.position = Vector3.UP*0.91
+		saber.basis = Basis.IDENTITY
 	else:
-		var ready_direction := Vector3(-0.25,0.65,0.72).normalized()
-		saber.position = ready_direction*0.91
-		saber.basis = Basis(Quaternion(Vector3.UP,ready_direction))
+		hand_socket.basis = Basis.IDENTITY
 func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> void:
 	aim_left = maxf(0,aim_left-delta)
 	recoil = move_toward(recoil,0,delta*9)
@@ -215,7 +214,7 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
 			var firing_arm: bool = joint_sides[key] == gun_side
-			var arm_pose := -angle*0.4-sin(reload_progress*PI)*0.65-evade_weight*0.25
+			var arm_pose := -0.20-angle*0.22-sin(reload_progress*PI)*0.65-evade_weight*0.25
 			var yaw_pose := 0.0
 			var roll_pose := 0.0
 			joint.position = joint_rest[key]
@@ -228,8 +227,11 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 					# Shield arm counterbalances the blade and braces the heavy finisher.
 					arm_pose -= attack_weight*0.55
 					yaw_pose = -attack_angle*0.16*attack_weight
+			elif firing_arm and saber_equipped:
+				arm_pose -= 0.38
+				roll_pose = -0.12
 			elif firing_arm and reload_progress == 0:
-				arm_pose -= (0.95+aim_pitch)*minf(1,aim_left*8)
+				arm_pose -= (1.15+aim_pitch)*minf(1,aim_left*8)
 				arm_pose -= recoil*0.18
 				joint.position += Vector3(0,recoil*0.025,-recoil*0.09)
 			elif aim_left > 0 and reload_progress == 0:
