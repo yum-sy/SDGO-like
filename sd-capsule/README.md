@@ -243,3 +243,17 @@ Moved the fist sockets below the original forearm geometry. Replaced the buried 
 ## Weapon handling and Zaku loadouts / 2026-11-15
 Gundam uses a higher rifle aiming stance and reduced armed walking sway; saber wrist/hand orientation now follows the hilt with a distinct ready guard. Runtime low-poly Zaku equipment includes a drum-fed machine gun, bazooka and heat hawk. Assault readies the axe, flanker carries the machine gun and support carries the bazooka; ranged/melee attacks select the corresponding held weapon. Enemy shots and muzzle flashes originate at the weapon muzzle. Existing damage, burst schedules and projectile behavior remain unchanged: bazooka splash damage is not implemented.
 Validation: 176 headless checks including per-role weapon attachment and switching; web export and PWA tests; browser checked close combat, firearm/saber handling and enemy weapon silhouettes without console errors. No physical mobile performance claim.
+
+
+## Combat Refinement / 2026-11-15
+
+Mobile-first fan-game quality pass, not a commercial-readiness claim. Audit priorities: distinct enemy weapons, predictable threats, simultaneous touch aim/fire, clear cooldown feedback and visible cover matching collision.
+
+- Support fires one slower rocket at a committed location. A ground ring and ROCKET warning announce the attack. The 3.2m blast has distance falloff and line-of-sight checks; cover shields the player. Rockets can damage cover and expire at the committed destination.
+- Flanker fires a three-round, six-damage machine-gun burst. Assault retains two-round ranged pressure and its close heat-hawk attack.
+- FIRE drag now rotates the camera while firing; joystick and other touches keep independent ownership. Touch buttons show reload, swing recovery and boost progress.
+- Crate source geometry is normalized to its 3x2.7x2.5m collider, eliminating misleading invisible cover. Industrial palette, safety bands, quieter floor lines and softer shadows improve readability. Source models and credits retained.
+
+Remaining quality work: production-quality character materials/rigs, richer arena art, weapon-specific sound assets, real-device profiling and first-time player feedback. These are not declared complete or equal to the original game.
+
+Validation: 185 headless checks and PWA package tests passed. Browser completed Cargo Yard (53.7s, HP40) and Reactor Ring (10.7s, HP88); inspected 844x390 touch HUD and reload/boost progress. Touch aim/fire ownership was tested with input events; physical phone testing remains unverified.

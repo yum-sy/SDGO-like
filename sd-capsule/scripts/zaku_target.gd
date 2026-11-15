@@ -23,6 +23,7 @@ var attack_kind := "ranged"
 var burst_left := 0
 var burst_delay := 0.0
 var pending_aim := Vector3.ZERO
+var rocket_warning: MeshInstance3D
 var knockback := Vector3.ZERO
 var ai_enabled := true
 var step_time := 0.0
@@ -39,6 +40,22 @@ func _ready() -> void:
 	model.set_script(preload("res://scripts/zaku_rig.gd"))
 	model.loadout_role = role
 	add_child(model)
+	rocket_warning = MeshInstance3D.new()
+	var warning_ring := TorusMesh.new()
+	warning_ring.inner_radius = 3.05
+	warning_ring.outer_radius = 3.20
+	warning_ring.rings = 32
+	warning_ring.ring_segments = 6
+	rocket_warning.mesh = warning_ring
+	var warning_mat := StandardMaterial3D.new()
+	warning_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	warning_mat.albedo_color = Color(1,0.38,0.10,0.60)
+	warning_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rocket_warning.material_override = warning_mat
+	rocket_warning.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(rocket_warning)
+	rocket_warning.top_level = true
+	rocket_warning.hide()
 	var collider := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()
 	shape.radius = 0.7
@@ -89,6 +106,7 @@ func damage(amount: int, kind: String = "other") -> void:
 	melee_clock.cancel()
 	model.strike_phase = -1
 	attack_warning.hide()
+	rocket_warning.hide()
 	if hp == 0:
 		collision_layer = 0
 		collision_mask = 0
@@ -165,7 +183,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 		if windup == 0 and stun == 0:
 			model.fire()
 			battle.enemy_shot(self,pending_aim)
-			burst_left = 2 if role == "SUPPORT" else 1
+			burst_left = 0 if role == "SUPPORT" else (2 if role == "FLANKER" else 1)
 			burst_delay = 0.18
 	elif command.fire and cooldown == 0 and stun == 0:
 		var sight := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()])
@@ -183,6 +201,10 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 				windup = 1.0 if role == "SUPPORT" else 0.65
 			cooldown = (1.7 if role == "ASSAULT" else 2.8)*(0.8 if veteran else 1.0)
 	attack_warning.sync(self)
+	rocket_warning.visible = hp > 0 and role == "SUPPORT" and windup > 0 and attack_kind == "ranged"
+	if rocket_warning.visible:
+		rocket_warning.global_position = pending_aim-Vector3.UP*1.0
+		rocket_warning.scale = Vector3.ONE*(0.90+0.10*sin(windup*20))
 	if position.y < -12:
 		damage(max_hp)
 func _process(delta: float) -> void:

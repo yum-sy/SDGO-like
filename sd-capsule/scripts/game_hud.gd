@@ -125,7 +125,7 @@ func _draw() -> void:
 				text(at+Vector2(-30,-44),"%s / %dm" % [target.role,player.position.distance_to(target.position)],16,MINT)
 			health_bar(at+Vector2(-25,42),50,target,Color(1,0.5,0.2) if target.windup>0 else MINT)
 			if target.windup > 0:
-				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else "INCOMING",16,Color(1,0.6,0.15))
+				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else ("ROCKET / EVADE" if target.role == "SUPPORT" else "BURST / COVER"),16,Color(1,0.6,0.15))
 				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/(1.0 if target.role == "SUPPORT" else (0.55 if target.attack_kind == "melee" else 0.65))),24,Color(1,0.6,0.15),3)
 		if battle.hit_left > 0:
 			for axis in [Vector2(1,1),Vector2(-1,1)]: draw_line(center-axis*12,center+axis*12,Color.WHITE,2)
@@ -142,6 +142,12 @@ func _draw() -> void:
 				draw_rect(rect,Color(0.6,0.85,1,0.4),false,1)
 				var label: String = {"cycle":"TARGET","weapon":"SWAP","aim":"AUTO ON" if battle.auto_aim else "FREE AIM"}.get(action,action.to_upper())
 				text(rect.position+Vector2(12,rect.size.y*0.5+6),label,20)
+				var button_progress := -1.0
+				if action == "fire" and rifle.reload_left > 0: button_progress = 1-rifle.reload_left/rifle.RELOAD_TIME
+				elif action == "melee" and battle.attack.running: button_progress = battle.attack.elapsed/battle.attack.duration()
+				elif action == "boost": button_progress = player.booster/100.0
+				if button_progress >= 0:
+					draw_rect(Rect2(rect.position+Vector2(8,rect.size.y-10),Vector2((rect.size.x-16)*clampf(button_progress,0,1),4)),MINT)
 		var hint: String = game.coaching.hint(battle,pilot.touch_visible)
 		if not hint.is_empty():
 			var hint_width := font.get_string_size(hint,HORIZONTAL_ALIGNMENT_LEFT,-1,16).x

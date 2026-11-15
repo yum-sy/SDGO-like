@@ -96,6 +96,9 @@ func _input(event: InputEvent) -> void:
 			touch_move = ((event.position-stick_origin)/65.0).limit_length()
 		if event.index == look_id:
 			look += event.relative*0.004
+		elif touches.get(event.index, "") == "fire":
+			# Right thumb aims while holding fire; left thumb keeps moving.
+			look += event.relative*0.003
 func held(action: String) -> bool:
 	return action in touches.values()
 func sample() -> Dictionary:

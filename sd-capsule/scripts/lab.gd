@@ -91,7 +91,7 @@ func _ready() -> void:
 	settings.fog_density = 0.003
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	settings.ambient_light_color = Color("b4d1ed")
-	settings.ambient_light_energy = 0.45
+	settings.ambient_light_energy = 0.62
 	environment.environment = settings
 	add_child(environment)
 	var light := DirectionalLight3D.new()
@@ -99,12 +99,13 @@ func _ready() -> void:
 	light.light_energy = 1.0
 	light.light_color = Color("ffe1bc") if arena.index == 0 else Color("c4e9ff")
 	light.shadow_enabled = true
+	light.shadow_opacity = 0.72
 	key_light = light
 	add_child(light)
 	block(Vector3(60,1,60),Vector3(0,-0.5,0),Color("304458"))
 	for i in range(-6,7):
-		box(self,Vector3(0.08,0.015,60),Vector3(i*5,0.01,0),Color("496074"))
-		box(self,Vector3(60,0.015,0.08),Vector3(0,0.01,i*5),Color("496074"))
+		box(self,Vector3(0.08,0.015,60),Vector3(i*5,0.01,0),Color("3a5061"))
+		box(self,Vector3(60,0.015,0.08),Vector3(0,0.01,i*5),Color("3a5061"))
 	for side in [-1,1]:
 		block(Vector3(1,5,60),Vector3(side*30,2.5,0),Color("26394b"))
 		block(Vector3(60,5,1),Vector3(0,2.5,side*30),Color("26394b"))
