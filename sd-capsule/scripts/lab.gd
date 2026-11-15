@@ -22,6 +22,7 @@ var sounds: Node
 var mode := "ready"
 var low_quality := DisplayServer.is_touchscreen_available()
 var lifecycle_epoch := 0
+var last_web_mode := ""
 var best_time := 0.0
 var saved_result := false
 var fps_samples: Array[float] = []
@@ -224,6 +225,9 @@ func save_settings() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.force_fs_sync()
 func _process(delta: float) -> void:
+	if OS.has_feature("web") and mode != last_web_mode:
+		last_web_mode = mode
+		JavaScriptBridge.eval("window.dispatchEvent(new CustomEvent('capsule-mode',{detail:'"+mode+"'}))")
 	if mode == "ready" and is_physics_processing() and is_instance_valid(camera):
 		showcase_time += delta
 		menu_camera = true

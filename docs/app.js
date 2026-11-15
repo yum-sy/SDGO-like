@@ -9,28 +9,29 @@
   const canvas = document.getElementById('canvas');
   const toolbox = document.getElementById('web-tools');
   window.capsuleOverlayOpen = false;
+  let mode = 'ready';
+  toolbox.dataset.mode = mode;
+  toolbox.open = true;
+  window.addEventListener('capsule-mode', event => {
+    mode = event.detail;
+    toolbox.dataset.mode = mode;
+    toolbox.open = mode !== 'playing';
+  });
+  toolbox.addEventListener('toggle', () => {
+    if(toolbox.open && mode === 'playing') window.capsuleLifecycleEpoch++;
+  });
   let waiting;
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  canvas.addEventListener('pointerdown', () => {canvas.focus();toolbox.open=false;});
+  canvas.addEventListener('pointerdown', () => {canvas.focus();if(mode === "playing") toolbox.open=false;});
   document.getElementById('fullscreen').onclick = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
       else { await document.documentElement.requestFullscreen(); await screen.orientation?.lock?.('landscape').catch(()=>{}); }
     } catch { note.textContent = '전체화면은 홈 화면 설치 또는 브라우저 메뉴를 사용하세요.'; }
   };
-  document.getElementById('mouse-lock').onclick = async () => {
-    try {
-      if (document.pointerLockElement) document.exitPointerLock();
-      else await canvas.requestPointerLock();
-    } catch { note.textContent = '마우스 잠금 미지원: 화면을 드래그해 시점을 돌리세요.'; }
-    canvas.focus();
-  };
-  document.addEventListener('pointerlockchange', () => {
-    document.getElementById('mouse-lock').textContent = document.pointerLockElement ? '잠금 해제' : '마우스 잠금';
-  });
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./index.service.worker.js').then(reg => {
-      const offer = () => { if(reg.waiting && navigator.serviceWorker.controller) {waiting=reg.waiting;update.hidden=false;toolbox.open=true;} };
+      const offer = () => { if(reg.waiting && navigator.serviceWorker.controller) {waiting=reg.waiting;update.hidden=false;if(mode !== "playing") toolbox.open=true;} };
       offer();
       reg.addEventListener('updatefound', () => { const worker=reg.installing; worker?.addEventListener('statechange',offer); });
       return navigator.serviceWorker.ready;

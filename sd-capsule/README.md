@@ -291,3 +291,11 @@ Touch movement has a 12% dead zone, 80-unit full-travel radius and safe-area-cla
 First-time touchscreen users default to LOW (80% 3D resolution, no MSAA/directional shadows). Explicit quality choices remain persisted. Rendering is capped at 60 FPS; LOW HUD redraw runs at up to 30 Hz while input/physics remain 60 Hz.
 
 Validation: 207 headless checks, installation lifecycle, background/rotation lifecycle and offline PWA tests passed. Browser checked 844x390 and 667x375 combat layouts, firing and pause, and quality setting persistence after reload. Desktop-hosted low-quality browser showed 60 FPS / rolling average 55 during this short check, not a phone benchmark. Multi-touch ownership was tested with synthesized Godot touch events. Actual Android/iOS home-screen installation, OS-level relaunch, sustained thermal performance and physical touch latency remain unverified without a connected phone.
+
+## Face surface and visible start actions / 2026-11-15
+
+Face markings now clip the original head triangles to their projected shapes, rather than spanning the face with corner-only planes. A dark visor, high-contrast yellow eyes, white mouth mask, paired vents, red chin, cheek insets and mint forehead sensor read distinctly over the source geometry without the grid artifacts of the intermediate implementation.
+
+Install, control help, fullscreen and credits are always exposed on ready/paused/result screens. Combat uses one Settings/Help entry; opening it requests a pause before presenting actions. Removed the standalone pointer-lock button: the current auto-targeting and mouse-button drag controls do not require it. Help describes the actual mouse behavior; mobile start/pause instructions show touch actions instead of keyboard-only commands. Native pointer-lock support in the input code is retained for compatibility, but it is no longer offered as a separate confusing toolbar action.
+
+Validation: 207 game checks plus web-toolbar state tests, installation, lifecycle and offline PWA tests. Browser checked face rendering, 1280x720 and 667x375 layouts, visible start actions, guide open/close, combat collapse and pause-on-settings with no console errors. Physical phone testing remains separate.
