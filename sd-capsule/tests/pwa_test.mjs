@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
-const handlers = {}, stores = new Map([['capsule-old',new Map()],['unrelated-cache',new Map()]]);
+const handlers = {}, stores = new Map([['sdgo-like-old',new Map()],['unrelated-cache',new Map()]]);
 let claimed = false;
 const key = value => new URL(typeof value === 'string' ? value : value.url,'https://example.test/game/').pathname;
 const caches = {
@@ -27,13 +27,13 @@ let pending;
 handlers.install({waitUntil(p){pending=p;}}); await pending;
 handlers.activate({waitUntil(p){pending=p;}}); await pending;
 assert.equal(claimed,true);
-assert.equal(stores.has('capsule-old'),false);
+assert.equal(stores.has('sdgo-like-old'),false);
 assert.equal(stores.has('unrelated-cache'),true);
 handlers.fetch({request:{method:'GET',url:'https://example.test/game/index.pck',mode:'cors'},respondWith(p){pending=p;}});
 assert.equal(await pending,'new-build');
 handlers.fetch({request:{method:'GET',url:'https://example.test/game/',mode:'navigate'},respondWith(p){pending=p;}});
 assert.equal(await pending,'new-build');
-for (const file of ['showcase.html','showcase-preview.jpg']) {
+for (const file of ['showcase.html','showcase-preview.jpg','install.js','index.maskable-512.png','index.icon.png']) {
  handlers.fetch({request:{method:'GET',url:'https://example.test/game/'+file,mode:'cors'},respondWith(p){pending=p;}});
  assert.equal(await pending,'new-build');
 }

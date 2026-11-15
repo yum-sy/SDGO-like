@@ -10,18 +10,9 @@
   const canvas = document.getElementById('canvas');
   const toolbox = document.getElementById('web-tools');
   window.capsuleOverlayOpen = false;
-  let prompt, waiting;
+  let waiting;
   canvas.addEventListener('contextmenu', e => e.preventDefault());
   canvas.addEventListener('pointerdown', () => {canvas.focus();toolbox.open=false;});
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); prompt = e; install.hidden = false;
-  });
-  install.onclick = async () => {
-    if (prompt) { await prompt.prompt(); await prompt.userChoice; prompt = null; install.hidden = true; }
-    else note.textContent = 'iPhone/iPad: Safari 공유 → 홈 화면에 추가';
-  };
-  if (/iPad|iPhone/.test(navigator.userAgent)) install.hidden = false;
-  window.addEventListener('appinstalled', () => {note.textContent = '설치 완료'; install.hidden = true;});
   document.getElementById('fullscreen').onclick = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();

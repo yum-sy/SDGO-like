@@ -23,3 +23,5 @@ CC0 https://creativecommons.org/publicdomain/zero/1.0/
 Downloaded 2026-11-14, source license texts under assets/audio and assets/props.
 
 Additional modifications to models: generated automatic mesh LODs; RX78 runtime rigid-part pivots and procedural walk/saber animation (not skeletal skinning).
+
+SDGO-like branding: Nise Gundam mascot illustration generated with OpenAI image generation from a user-supplied character reference, 2026-11-15. The supplied reference is not redistributed. Gundam/Zaku character rights remain with their respective owners.

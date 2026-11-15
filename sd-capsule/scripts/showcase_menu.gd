@@ -17,7 +17,7 @@ static func draw(h: Control) -> void:
 	if not ready: h.draw_rect(Rect2(Vector2.ZERO,size),Color(0.015,0.03,0.05,0.74))
 	panel(h,Rect2(x-16,top-24,580,size.y-top-18),0.94 if not ready else 0.88)
 	h.draw_rect(Rect2(x-16,top-24,4,64),ACCENT)
-	h.text(Vector2(x,top),"CAPSULE SORTIE   /   PLAYABLE SHOWCASE",14,ACCENT)
+	h.text(Vector2(x,top),"SDGO-like   /   PLAYABLE SHOWCASE",14,ACCENT)
 	if ready:
 		h.text(Vector2(x,top+76),"SMALL SCALE.",50,INK)
 		h.text(Vector2(x,top+133),"FULL IMPACT.",50,INK)

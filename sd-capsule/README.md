@@ -1,11 +1,11 @@
-# Capsule Sortie — Attack Motion Update
+# SDGO-like — Attack Motion Update
 
 Godot 4.7.2 standard / GDScript / WebGL 2.0 Compatibility / single-thread Web export.
 실제 무료 SD RX78 모델을 조작해 자쿠 3기를 격파하는 싱글플레이 데모입니다. 비공식 팬 프로젝트이며 원작 게임의 코드·데이터를 사용하지 않습니다.
 
 ## 실행 및 조작
 
-배포 주소: https://yum-sy.github.io/sd-capsule-fighter-demo/
+배포 주소: https://yum-sy.github.io/SDGO-like/
 
 - Enter 또는 화면 터치: 시작/재도전
 - WASD 이동, Space 점프/길게 공중 부스터, Shift 방향 대시
@@ -268,3 +268,16 @@ Both Gundam forearms now rotate around separate elbow pivots with mechanical bea
 Cargo Yard gains stacked ribbed containers and loading markings; Reactor Ring gains banded towers and service pipes. Both receive wall supports and service lighting. Static decoration is merged by palette into fewer than 20 meshes per arena with no additional collision or shadow passes.
 
 Validation: 195 headless checks, web export and PWA checks passed. Browser QA at 844x390 inspected both arenas, touch HUD, shooting and saber recovery. Real-device touch performance is not measured.
+
+
+## SDGO-like / Nise Gundam identity and install entry / 2026-11-15
+
+Repository and public Pages path renamed to https://github.com/yum-sy/SDGO-like and https://yum-sy.github.io/SDGO-like/ . Web title and PWA names match; internal save directory remains stable. Generated Nise Gundam artwork supplies favicon, Apple icon, ordinary/maskable installation icons and loading art. Maskable artwork has separate safe padding. User reference is not redistributed; generated master is in art/branding.
+
+Start dialog recommends installation, uses the actual beforeinstallprompt event when available and otherwise explains platform installation. Web play is always available. Dismissal is session-scoped; standalone apps skip the dialog. Native completion is based on appinstalled, not merely accepted prompt. A toolbar entry allows reopening help.
+
+Gundam eyes are projected onto source face triangles; mask vents, chin, forehead sensor and chest details improve recognition. Stride strength blends between movement, attack and rest. Saber contacts add two short cosmetic streaks under the existing effect count limit. Damage timing is unchanged.
+
+Validated at 844x390 and 390x844 browser sizes, including install help, web continuation, movement and saber recovery. Native device installation and physical-phone performance remain unverified.
+
+Validation: 200 headless checks, installation lifecycle tests and offline PWA package tests passed.

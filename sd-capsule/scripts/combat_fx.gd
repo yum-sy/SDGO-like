@@ -4,6 +4,7 @@ var age := 0.0
 var lifetime := 0.5
 var fragments: Array[Dictionary] = []
 var smoke: Array[MeshInstance3D] = []
+var contact_flare: Array[MeshInstance3D] = []
 var shockwave: MeshInstance3D
 var ring: MeshInstance3D
 static func spawn(parent: Node, at: Vector3, tint: Color, intensity: float = 1.0) -> Node3D:
@@ -49,6 +50,19 @@ func setup(tint: Color, intensity: float) -> void:
 		var direction := Vector3(sin(i*2.4),0.3+fmod(i*0.37,1.0),cos(i*2.4)).normalized()
 		shard.look_at(global_position+direction)
 		fragments.append({"mesh":shard,"velocity":direction*(2.0+fmod(i*0.73,3.0))*intensity})
+	if tint.r > 0.8 and tint.b > 0.4 and intensity >= 1:
+		for tilt in [-0.65,0.65]:
+			var slash := MeshInstance3D.new()
+			var slash_mesh := BoxMesh.new()
+			slash_mesh.size = Vector3(0.035,0.9*intensity,0.015)
+			slash.mesh = slash_mesh
+			slash.material_override = material(Color(1,0.94,0.97))
+			slash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(slash)
+			var camera := get_viewport().get_camera_3d()
+			if camera: slash.global_basis = camera.global_basis
+			slash.rotate_object_local(Vector3.BACK,tilt)
+			contact_flare.append(slash)
 	ring = MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.12*intensity
@@ -72,6 +86,7 @@ func _process(delta: float) -> void:
 	var scene := get_tree().current_scene
 	if is_instance_valid(scene) and scene.get("mode") == "paused": return
 	age += delta
+	for slash in contact_flare: slash.scale = Vector3.ONE*maxf(0,1-age/0.12)
 	var fade := maxf(0,1-age/lifetime)
 	for fragment in fragments:
 		fragment.velocity.y -= delta*7

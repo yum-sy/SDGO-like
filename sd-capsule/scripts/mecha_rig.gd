@@ -15,6 +15,7 @@ var aim_left := 0.0
 var aim_pitch := 0.0
 var gun_side := "R"
 var evade_weight := 0.0
+var stride_weight := 0.0
 var recoil := 0.0
 var hurt := 0.0
 var landing := 0.0
@@ -110,6 +111,7 @@ func _ready() -> void:
 		bearing_mat.roughness = 0.6
 		bearing.material_override = bearing_mat
 		elbow.add_child(bearing)
+	preload("res://scripts/gundam_details.gd").build(self)
 	saber = MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = 0.045
@@ -220,7 +222,9 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	for flame in thrusters:
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
-	var stride := clampf(Vector2(velocity.x,velocity.z).length()/7.0,0,1) * 0.35 if grounded else 0.0
+	var desired_stride := clampf(Vector2(velocity.x,velocity.z).length()/7.0,0,1) if grounded else 0.0
+	stride_weight = lerpf(stride_weight,desired_stride,1-exp(-12*delta))
+	var stride := stride_weight*0.35*(1-attack_weight*0.8)
 	var animated := {}
 	for key in joints:
 		var joint: Node3D = joints[key]
