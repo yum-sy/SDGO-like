@@ -1,6 +1,6 @@
 # Capsule Sortie
 
-Godot 4 기반 SD 건담 캡슐파이터 팬게임 — Combat Refinement.
+Godot 4 기반 SD 건담 캡슐파이터 팬게임 — Visual Refinement.
 
 [시연 소개](https://yum-sy.github.io/sd-capsule-fighter-demo/showcase.html) · [플레이](https://yum-sy.github.io/sd-capsule-fighter-demo/) · [개발·조작·검증 문서](sd-capsule/README.md) · [에셋 크레딧](sd-capsule/CREDITS.txt)
 

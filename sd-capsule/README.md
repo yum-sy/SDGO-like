@@ -257,3 +257,14 @@ Mobile-first fan-game quality pass, not a commercial-readiness claim. Audit prio
 Remaining quality work: production-quality character materials/rigs, richer arena art, weapon-specific sound assets, real-device profiling and first-time player feedback. These are not declared complete or equal to the original game.
 
 Validation: 185 headless checks and PWA package tests passed. Browser completed Cargo Yard (53.7s, HP40) and Reactor Ring (10.7s, HP88); inspected 844x390 touch HUD and reload/boost progress. Touch aim/fire ownership was tested with input events; physical phone testing remains unverified.
+
+
+## Visual Refinement / 2026-11-15
+
+Gundam painted armor uses single-pass toon diffuse/specular shading with restrained rim highlights; source white paint is cooled to retain shape. Zaku keeps its original textured colors with rough, continuous shading after mobile-size visual QA showed toon highlights washing out its surface. Source materials are duplicated rather than mutated.
+
+Both Gundam forearms now rotate around separate elbow pivots with mechanical bearings. Hands, rifle and shield follow those pivots; aim, reload, melee and recovery flex the elbow, while the saber hand still follows the authoritative attack direction. Zaku gains subtle velocity-based torso lean. These remain rigid-part rigs, not a newly skinned model.
+
+Cargo Yard gains stacked ribbed containers and loading markings; Reactor Ring gains banded towers and service pipes. Both receive wall supports and service lighting. Static decoration is merged by palette into fewer than 20 meshes per arena with no additional collision or shadow passes.
+
+Validation: 195 headless checks, web export and PWA checks passed. Browser QA at 844x390 inspected both arenas, touch HUD, shooting and saber recovery. Real-device touch performance is not measured.

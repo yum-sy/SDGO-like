@@ -1,6 +1,6 @@
 config_version=5
 [application]
-config/name="Capsule Sortie · Combat Refinement"
+config/name="Capsule Sortie · Visual Refinement"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="CapsuleSortie"
 run/main_scene="res://main.tscn"

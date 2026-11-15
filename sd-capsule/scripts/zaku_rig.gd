@@ -18,6 +18,7 @@ var dying := false
 var death_time := 0.0
 var boost_meshes: Array[MeshInstance3D] = []
 func _ready() -> void:
+	preload("res://scripts/mecha_finish.gd").apply(self,false)
 	var pivots := {"torso":Vector3(0,1.05,0),"head":Vector3(0,1.48,0),"leg_L":Vector3(0.32,0.8,0),"leg_R":Vector3(-0.32,0.8,0),"arm_L":Vector3(0.58,1.38,0),"arm_R":Vector3(-0.58,1.38,0)}
 	var parts := get_children()
 	for key in pivots:
@@ -107,6 +108,7 @@ func animate(velocity: Vector3, windup: float, evade: bool, delta: float) -> voi
 	joints.torso.rotation.x = lerpf(joints.torso.rotation.x,-hurt*0.24+recoil*0.12,blend)
 	position.y = lerpf(position.y,absf(sin(phase))*stride*0.12-evade_weight*0.12,blend)
 	var local_motion := global_basis.inverse()*velocity
-	rotation.x = lerpf(rotation.x,-0.16*evade_weight,blend)
+	rotation.x = lerpf(rotation.x,-0.16*evade_weight+clampf(local_motion.z/65,-0.06,0.06),blend)
+	joints.torso.rotation.z = lerpf(joints.torso.rotation.z,clampf(-local_motion.x/70,-0.07,0.07),blend)
 	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/7,-0.32,0.32)*evade_weight+hurt*0.17,blend)
 	update_weapon_pose()

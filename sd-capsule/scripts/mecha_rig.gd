@@ -2,6 +2,7 @@ extends Node3D
 # Rigid-part animation, not skinning. Original source geometry stays intact.
 var joints := {}
 var joint_rest := {}
+var elbows := {}
 var attack_weight := 0.0
 var weapon: MeshInstance3D
 var hand_socket: Node3D
@@ -26,6 +27,7 @@ var swing_left := 0.0
 var swing_duration := 0.32
 var swing_index := 0
 func _ready() -> void:
+	preload("res://scripts/mecha_finish.gd").apply(self,true)
 	var shoulders := {}
 	for part in get_children():
 		if part is MeshInstance3D and "hand_lengan" in str(part.name):
@@ -86,6 +88,28 @@ func _ready() -> void:
 		if side_name == gun_side: hand_socket = socket
 		else: shield_mount = socket
 		build_hand(socket,side_name)
+		var elbow := Node3D.new()
+		elbow.name = "Elbow"+side_name
+		arm.add_child(elbow)
+		elbow.position = Vector3(hand_center.x,0.73,hand_center.z)-arm.position
+		for child in arm.get_children():
+			if child == elbow: continue
+			if child == socket or (child is MeshInstance3D and (("hand_"+side_name+"__") in str(child.name) or "armor_" in str(child.name))):
+				child.reparent(elbow)
+		elbows[side_name] = elbow
+		var bearing := MeshInstance3D.new()
+		var bearing_mesh := CylinderMesh.new()
+		bearing_mesh.top_radius = 0.095
+		bearing_mesh.bottom_radius = 0.095
+		bearing_mesh.height = 0.19
+		bearing_mesh.radial_segments = 10
+		bearing.mesh = bearing_mesh
+		bearing.rotation.z = PI/2
+		var bearing_mat := StandardMaterial3D.new()
+		bearing_mat.albedo_color = Color("3e5061")
+		bearing_mat.roughness = 0.6
+		bearing.material_override = bearing_mat
+		elbow.add_child(bearing)
 	saber = MeshInstance3D.new()
 	var shape := CylinderMesh.new()
 	shape.top_radius = 0.045
@@ -173,7 +197,7 @@ func apply_blade_pose() -> void:
 	if is_instance_valid(weapon): weapon.visible = not saber.visible
 	if saber.visible:
 		var direction := Vector3(sin(attack_angle),0,cos(attack_angle)) if swing_left > 0 else Vector3(-0.25,0.65,0.72).normalized()
-		var local_direction: Vector3 = hand_socket.get_parent().basis.inverse() * direction
+		var local_direction: Vector3 = hand_socket.get_parent().global_basis.inverse() * global_basis * direction
 		# Rotate the entire gripping hand with the hilt, not the blade alone.
 		hand_socket.basis = Basis(Quaternion(Vector3.UP,local_direction.normalized()))
 		saber.position = Vector3.UP*0.91
@@ -231,7 +255,7 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 				arm_pose -= 0.38
 				roll_pose = -0.12
 			elif firing_arm and reload_progress == 0:
-				arm_pose -= (1.15+aim_pitch)*minf(1,aim_left*8)
+				arm_pose -= (0.85+aim_pitch)*minf(1,aim_left*8)
 				arm_pose -= recoil*0.18
 				joint.position += Vector3(0,recoil*0.025,-recoil*0.09)
 			elif aim_left > 0 and reload_progress == 0:
@@ -239,6 +263,13 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			joint.rotation.x = lerpf(joint.rotation.x,arm_pose,blend)
 			joint.rotation.y = lerp_angle(joint.rotation.y,yaw_pose,blend)
 			joint.rotation.z = lerp_angle(joint.rotation.z,roll_pose,blend)
+	for side_name in elbows:
+		var bend := -0.14
+		if side_name == gun_side:
+			bend -= 0.30*minf(1,aim_left*8) + 0.34*sin(reload_progress*PI)
+			bend -= 0.20*attack_weight
+		else: bend -= 0.18*attack_weight
+		elbows[side_name].rotation.x = lerpf(elbows[side_name].rotation.x,bend,blend)
 	apply_blade_pose()
 
 func die() -> void:
