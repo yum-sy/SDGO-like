@@ -299,3 +299,13 @@ Face markings now clip the original head triangles to their projected shapes, ra
 Install, control help, fullscreen and credits are always exposed on ready/paused/result screens. Combat uses one Settings/Help entry; opening it requests a pause before presenting actions. Removed the standalone pointer-lock button: the current auto-targeting and mouse-button drag controls do not require it. Help describes the actual mouse behavior; mobile start/pause instructions show touch actions instead of keyboard-only commands. Native pointer-lock support in the input code is retained for compatibility, but it is no longer offered as a separate confusing toolbar action.
 
 Validation: 207 game checks plus web-toolbar state tests, installation, lifecycle and offline PWA tests. Browser checked face rendering, 1280x720 and 667x375 layouts, visible start actions, guide open/close, combat collapse and pause-on-settings with no console errors. Physical phone testing remains separate.
+
+## Correct anatomical eye recess / 2026-11-15
+
+Correction to the previous visual pass: the original eye cavity is around y=1.40, not y=1.57. The prior visor and lenses painted the forehead while leaving the recessed eyes blank. An unadorned orthographic head render exposed this placement error.
+
+Removed those forehead overlays. The original recessed backing triangles are now painted dark in the baked runtime mesh. Two yellow lenses follow only those triangles with a 0.003-unit lift, below the brow and behind its rim. The source chin and center crest geometry are painted red; mouth vents and the forehead sensor now use the corresponding original geometry positions. Source GLB remains unchanged.
+
+Reference checks: Sketchfab public v3 model metadata confirmed download-enabled status for the existing nickqd Rx78, Ripjet's RX-78-2 Gundam Low-Poly (654a4ace05ba42359009ba732cf54fcb, BY-NC, no animations), and nama_140's RX-78-2 (8b1ec0f948984aa897e60b63a13b501c, BY, one animation). Metadata access does not itself obtain authenticated download archives; no replacement assets were downloaded/imported. Compared Ripjet's viewer and Bandai's BB Senshi No.200 official reference (https://p-bandai.jp/item/item-1000130852/) for eye/face placement. Capsule Fighter reference searches were supplemental and no ripped game asset was used.
+
+New geometry tests assert eye height, per-vertex depth against the actual source surface, and dark vertex colors on the original cavity triangles. 210 headless checks passed. Reproducible front/30-degree head review uses tools/render_head_review.gd; browser checked the game camera at 1280x720 and 844x390 with no console errors.

@@ -56,7 +56,10 @@ func paint_details(mesh: ArrayMesh, part: String) -> ArrayMesh:
 		var color := Color("d5dfe7")
 		var x: float = absf(v.x+0.111)
 		if "head" in part:
-			if x < 0.09 and v.y > 1.79 and v.z > 0.04: color = Color("c83443")
+			if preload("res://scripts/gundam_details.gd").is_eye_recess(vertices[base],vertices[base+1],vertices[base+2]): color = Color("101b2a")
+			elif preload("res://scripts/gundam_details.gd").is_crest(vertices[base],vertices[base+1],vertices[base+2]): color = Color("c72e3e")
+			elif preload("res://scripts/gundam_details.gd").is_chin(vertices[base],vertices[base+1],vertices[base+2]): color = Color("c72e3e")
+			elif x < 0.09 and v.y > 1.79 and v.z > 0.04: color = Color("c83443")
 			elif v.z < -0.36 and v.y < 1.35: color = Color("354558")
 		elif "leg_" in part:
 			if v.y < 0.055: color = Color("293c50")

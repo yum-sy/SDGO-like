@@ -20,7 +20,7 @@ func run() -> void:
  check(rig.elbows[rig.gun_side].rotation.x < -0.2,"rifle aiming flexes the elbow")
  for i in range(120): rig.animate(Vector3.ZERO,true,0,0.016)
  check(absf(rig.elbows[rig.gun_side].rotation.x+0.14) < 0.01,"elbow recovers without pose accumulation")
- check(rig.get_node("FaceDetails").get_children().filter(func(n): return str(n.name).begins_with("Eye")).size() == 4,"two eyes and their sockets are present")
+ check(rig.get_node("FaceDetails").get_children().filter(func(n): return str(n.name).begins_with("Eye")).size() == 2,"two eye lenses are present in the source recess")
  rig.animate(Vector3(7,0,0),true,0.5,0.016)
  check(rig.stride_weight > 0 and rig.stride_weight < 1,"locomotion blends into a stride rather than snapping")
  for i in range(100): rig.animate(Vector3.ZERO,true,0.5,0.016)
