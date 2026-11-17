@@ -9,6 +9,7 @@ var hp: int:
 	get: return state.hp
 var focus_yaw := NAN
 var last_hit_from := Vector3.ZERO
+var special_locked := false
 var attack_slow := 1.0
 var yaw := 0.0
 var pitch := -0.22
@@ -49,6 +50,11 @@ func simulate(command: Dictionary, delta: float) -> void:
 		look_delta = look_delta.limit_length(PI*minf(delta,1.0/30.0))
 	yaw -= look_delta.x
 	pitch = clampf(pitch - look_delta.y, -0.9, 0.45)
+	if special_locked:
+		velocity = Vector3.ZERO
+		impulse = Vector3.ZERO
+		rig.animate(velocity,is_on_floor(),animation_time,delta)
+		return
 	var direction := Basis(Vector3.UP, yaw) * Vector3(command.move.x, 0, command.move.y)
 	dash_cooldown = maxf(0,dash_cooldown-delta)
 	dash_left = maxf(0,dash_left-delta)

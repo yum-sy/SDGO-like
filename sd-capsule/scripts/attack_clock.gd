@@ -34,7 +34,7 @@ func stage() -> String:
 func sweep_angle(at: float) -> float:
 	var c: Vector3 = clip()
 	var sweep := clampf((at-c.x)/c.y,0,1)
-	return lerpf(-1.15,1.15,sweep)*(1 if index%2 else -1)
+	return lerpf(-1.15,1.15,smoothstep(0,1,sweep))*(1 if index%2 else -1)
 func pose_angle() -> float:
 	var c: Vector3 = clip()
 	if elapsed < c.x: return lerpf(-0.3,sweep_angle(c.x),smoothstep(0,1,elapsed/c.x))

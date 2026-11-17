@@ -18,6 +18,8 @@ var evade_weight := 0.0
 var stride_weight := 0.0
 var recoil := 0.0
 var hurt := 0.0
+var previous_velocity := Vector3.ZERO
+var inertia := Vector3.ZERO
 var landing := 0.0
 var boost_active := false
 var reload_progress := 0.0
@@ -211,13 +213,16 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	recoil = move_toward(recoil,0,delta*9)
 	hurt = move_toward(hurt,0,delta*5)
 	landing = move_toward(landing,0,delta*6)
+	var acceleration := (velocity-previous_velocity)/maxf(delta,0.001)
+	previous_velocity = velocity
+	inertia = inertia.lerp((global_basis.inverse()*acceleration).limit_length(35),1-exp(-9*delta))
 	var forward_speed := (global_basis.inverse()*velocity).z
-	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else clampf(forward_speed/70,-0.1,0.1))+hurt*0.16,1-exp(-12*delta))
+	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else clampf(forward_speed/70,-0.1,0.1))+hurt*0.16+clampf(inertia.z*0.002,-0.07,0.07),1-exp(-12*delta))
 	var blend := 1-exp(-16*delta)
 	evade_weight = lerpf(evade_weight,1.0 if boost_active else 0.0,blend)
 	var local_motion := global_basis.inverse()*velocity
 	var slash_bank := sin(attack_angle)*0.12 if swing_left > 0 else 0.0
-	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*evade_weight+hurt*0.08+slash_bank,blend)
+	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*maxf(0.25,evade_weight)+hurt*0.08+slash_bank-clampf(inertia.x*0.002,-0.07,0.07),blend)
 	position.y = -landing*0.12 - attack_weight*(0.08 if swing_index == 3 else 0.035) + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
 	for flame in thrusters:
 		flame.visible = boost_active
@@ -238,6 +243,7 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			var leg_pose := angle*forward_weight if grounded else -0.25
 			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65,blend)
 			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
+			leg_pose -= landing*0.18
 			leg_pose += attack_weight*side*(0.24 if swing_index == 3 else 0.12)
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:

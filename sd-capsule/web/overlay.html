@@ -17,7 +17,7 @@ canvas {touch-action:none;outline:none;}
 #web-tools .tool-actions {margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;padding:10px;background:#0b1a27f5;border:1px solid #375264;border-radius:10px;min-width:320px;}
 #status {background:radial-gradient(ellipse at 65% 40%,#183649,#08131e)!important;gap:22px;font-family:system-ui;}
 #status::before {content:"SDGO-like";font-size:clamp(24px,5vw,48px);font-weight:800;letter-spacing:.12em;color:#e6f0f5;}
-#status::after {content:"기체와 전장을 준비하고 있습니다";font-size:14px;color:#91b1c1;}
+#status::after {content:attr(data-loading-label);font-size:14px;color:#91b1c1;}
 #status-splash {display:block!important;position:static!important;width:clamp(96px,22vw,164px)!important;height:auto!important;max-height:30vh;object-fit:contain;order:-1;border-radius:22%;}
 #status-progress {position:static!important;width:min(400px,70vw);height:5px;accent-color:#69ead0;}
 #status-notice {position:static!important;max-width:75vw;}
@@ -56,7 +56,7 @@ dialog button {background:#69ead0;color:#092532;font-weight:700;border:0;padding
 </details>
 <dialog id="guide-dialog"><p class="eyebrow">SDGO-like / FIELD GUIDE</p><h2>3기를 격파하세요.</h2>
 <p>먼 거리에서는 라이플, 가까이 붙으면 사벨. 주황색 공격 예고가 보이면 옆으로 대시하세요.</p>
-<div class="guide-grid"><section><h3>PC</h3><p>WASD 이동 · 자동 표적 보조 기본<br>좌클릭 / F 사격 · 우클릭 / V 근접<br>마우스 버튼을 누른 채 움직여 시점 회전<br>Space 점프·부스터 · Shift 대시<br>Tab 적 찾기 · R 재장전</p></section><section><h3>터치</h3><p>왼쪽 조이스틱으로 이동<br>FIRE: 사격 · BOOST: 점프·상승<br>공격·이동 버튼은 시점을 회전시키지 않습니다.<br>MELEE 한 번 탭 = 한 번 공격<br>DASH 회피 · BOOST 점프·부스터<br>버튼 밖 화면을 드래그해 시점 회전<br>시점은 버튼 밖에서 시작한 드래그만 조작합니다.<br>TARGET을 탭하면 적 방향으로 천천히 돌아갑니다.</p></section></div>
+<div class="guide-grid"><section><h3>PC</h3><p>WASD 이동 · 자동 표적 보조 기본<br>좌클릭 / F 사격 · 우클릭 / V 근접<br>마우스 버튼을 누른 채 움직여 시점 회전<br>Space 점프·부스터 · Shift 대시<br>Tab 적 찾기 · R 재장전 · G 필살기</p></section><section><h3>터치</h3><p>왼쪽 조이스틱으로 이동<br>FIRE: 사격 · BOOST: 점프·상승<br>공격·이동 버튼은 시점을 회전시키지 않습니다.<br>SP: 게이지 100%에서 방출형 필살기<br>명중·피격·격파로 충전 / 발동 중 이동 불가<br>MELEE 한 번 탭 = 한 번 공격<br>DASH 회피 · BOOST 점프·부스터<br>버튼 밖 화면을 드래그해 시점 회전<br>시점은 버튼 밖에서 시작한 드래그만 조작합니다.<br>TARGET을 탭하면 적 방향으로 천천히 돌아갑니다.</p></section></div>
 <p>적이 엄폐 뒤에 있으면 돌아가거나 점프해서 사선을 확보하세요. C / AUTO로 자유 조준을 켜고 상자를 파괴할 수도 있습니다.</p>
 <button id="close-guide">가이드 닫기</button></dialog>
 <div id="rotate-note">기기를 가로로 돌려 주세요.<br>화면 전체에서 이동·공격·시점을 동시에 조작합니다.</div>

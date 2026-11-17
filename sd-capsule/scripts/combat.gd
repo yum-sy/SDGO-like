@@ -3,6 +3,12 @@ const Bolt = preload("res://scripts/enemy_bolt.gd")
 const FX = preload("res://scripts/combat_fx.gd")
 const Rifle = preload("res://scripts/beam_rifle.gd")
 const RANGE := 45.0
+var special := preload("res://scripts/special_attack.gd").new()
+var special_visual: Node3D
+var special_origin := Vector3.ZERO
+var special_direction := Vector3.FORWARD
+var special_was_held := false
+var observed_hp := 100
 var attack := preload("res://scripts/attack_clock.gd").new()
 var attack_facing := Vector3.FORWARD
 var melee_buffer := 0.0
@@ -99,6 +105,8 @@ func update_target(cycle: bool) -> void:
 func step(command: Dictionary, delta: float) -> void:
 	if won or lost:
 		return
+	if player.hp < observed_hp: charge_special((observed_hp-player.hp)*1.5)
+	observed_hp = player.hp
 	elapsed += delta
 	notice_left = maxf(0,notice_left-delta)
 	camera_trauma = move_toward(camera_trauma,0,delta*3)
@@ -111,8 +119,18 @@ func step(command: Dictionary, delta: float) -> void:
 	melee_cooldown = maxf(0,melee_cooldown-delta)
 	combo_window = maxf(0,combo_window-delta)
 	if player.hp <= 0:
+		finish_special()
 		lost = true
 		clear_bolts()
+		return
+	var requested: bool = command.get("special",false)
+	if requested and not special_was_held and not special.running:
+		if not start_special(): announce("SP %d%% / LAND HITS TO CHARGE" % special.gauge)
+	special_was_held = requested
+	if special.running:
+		advance_special(delta)
+		if ai_enabled and not won:
+			for target in targets: target.step(player,self,delta)
 		return
 	if player.dash_left > 0 and attack.running: cancel_melee()
 	advance_melee(delta)
@@ -206,6 +224,7 @@ func advance_melee(delta: float) -> void:
 				attack.hit_ids[target.get_instance_id()] = true
 				var amount: int = [25,30,45][combo-1]
 				target.damage(amount,"saber")
+				if target in targets: charge_special(4)
 				if target is CharacterBody3D: target.knockback = attack_facing*(9 if combo == 3 else 3)
 				impact(target.aim_point(),amount,Color(1,0.25,0.6))
 				camera_trauma = 0.35 if combo == 3 else 0.16
@@ -240,6 +259,7 @@ func shoot() -> void:
 		endpoint = result.position
 		if result.collider.has_method("damage"):
 			result.collider.damage(Rifle.DAMAGE,"rifle")
+			if result.collider in targets: charge_special(4)
 			impact(endpoint,Rifle.DAMAGE,Color(0.5,1,0.8))
 			hits += 1
 			sound("hit")
@@ -281,8 +301,66 @@ func on_destroyed(_target: Node3D) -> void:
 	camera_trauma = maxf(camera_trauma,0.28)
 	sound("destroy")
 	kills += 1
+	charge_special(50)
 	selected = null
 	won = kills == targets.size()
 	if won:
+		finish_special()
 		clear_bolts()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func charge_special(amount: float) -> void:
+	if special.gain(amount):
+		announce("SP READY / G OR SP / BEAM DISCHARGE")
+		sound("ready")
+func start_special() -> bool:
+	if player.hp <= 0 or won or lost or attack.running or player.dash_left > 0: return false
+	if not special.begin(): return false
+	cancel_melee()
+	player.special_locked = true
+	player.focus_yaw = NAN
+	player.velocity = Vector3.ZERO
+	player.impulse = Vector3.ZERO
+	special_origin = player.aim_point()+Vector3.UP*0.2+player.visual.global_basis.x*0.5
+	special_direction = -camera.global_basis.z
+	if is_instance_valid(selected) and eligible(selected): special_direction = (selected.aim_point()-special_origin).normalized()
+	player.visual.rotation.y = atan2(-special_direction.x,-special_direction.z)
+	player.rig.aim_pitch = asin(clampf(special_direction.y,-1,1))
+	if not is_instance_valid(special_visual):
+		special_visual = preload("res://scripts/special_beam.gd").new()
+		add_child(special_visual)
+	announce("BEAM DISCHARGE / DIRECTION LOCKED")
+	sound("saber")
+	return true
+func special_endpoint() -> Vector3:
+	var end := special_origin+special_direction*32
+	var wall := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(special_origin,end,1,[player.get_rid()]))
+	return wall.position if not wall.is_empty() else end
+func advance_special(delta: float) -> void:
+	var previous := special.stage()
+	var pulses: int = special.advance(delta)
+	if previous == "WINDUP" and special.stage() != "WINDUP": sound("special")
+	player.rig.aim_left = 0.5
+	player.rig.saber_equipped = false
+	player.rig.recoil = 0.25 if special.stage() == "DISCHARGE" else 0
+	var end := special_endpoint()
+	special_visual.sync(special_origin,end,special.stage(),special.elapsed)
+	for pulse in range(pulses):
+		for target in targets:
+			if target.hp <= 0: continue
+			var offset: Vector3 = target.aim_point()-special_origin
+			var along := offset.dot(special_direction)
+			if along < 0 or along > special_origin.distance_to(end): continue
+			if (offset-special_direction*along).length() > 1.25: continue
+			var sight := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(special_origin,target.aim_point(),1,[player.get_rid()]))
+			if not sight.is_empty(): continue
+			target.damage(24,"special")
+			hit_left = 0.16
+			if special.pulses % 2 == 0: impact(target.aim_point(),24,Color(0.5,0.9,1))
+			if won: return
+	if not special.running: finish_special()
+func finish_special() -> void:
+	special.cancel()
+	player.special_locked = false
+	player.attack_slow = 1
+	if is_instance_valid(special_visual): special_visual.hide()

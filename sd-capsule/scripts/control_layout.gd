@@ -3,6 +3,7 @@ static var safe := Vector4.ZERO
 static func buttons(size: Vector2) -> Dictionary:
 	size -= Vector2(safe.z,safe.w)
 	return {
+		"special":Rect2(size-Vector2(400,400),Vector2(110,80)),
 		"fire":Rect2(size-Vector2(150,160),Vector2(110,110)),
 		"melee":Rect2(size-Vector2(280,160),Vector2(110,110)),
 		"boost":Rect2(size-Vector2(150,290),Vector2(110,110)),

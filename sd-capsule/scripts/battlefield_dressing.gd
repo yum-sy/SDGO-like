@@ -48,6 +48,12 @@ func build(game: Node3D, arena_id: int) -> void:
 		game.box(self,Vector3(5,0.012,0.14),Vector3(x,0.032,21),accent)
 		for offset in [-2.4,2.4]:
 			game.box(self,Vector3(0.14,0.012,5),Vector3(x+offset,0.032,23.5),accent)
+	# Broad, subdued service pads establish scale without adding visual noise.
+	for x in [-12,12]:
+		for z in [-15,5,21]:
+			game.box(self,Vector3(7,0.012,5),Vector3(x,0.018,z),Color("2b4051"))
+			for edge in [-1,1]:
+				game.box(self,Vector3(0.10,0.012,1.4),Vector3(x+edge*3.5,0.034,z),accent.darkened(0.35))
 	batch_static_geometry()
 
 func batch_static_geometry() -> void:

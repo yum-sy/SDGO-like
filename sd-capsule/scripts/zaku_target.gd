@@ -17,6 +17,7 @@ var model: Node3D
 var flash_left := 0.0
 var flash_mesh: MeshInstance3D
 var stun := 0.0
+var recovery := 0.0
 var cooldown := 0.65
 var windup := 0.0
 var attack_kind := "ranged"
@@ -115,6 +116,7 @@ func damage(amount: int, kind: String = "other") -> void:
 func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	if hp <= 0 or not ai_enabled:
 		return
+	recovery = maxf(0,recovery-delta)
 	stun = maxf(0,stun-delta)
 	cooldown = maxf(0,cooldown-delta)
 	sight_left -= delta
@@ -126,13 +128,14 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	var command := brain.sample(self,player,delta)
 	if veteran: command.speed *= 1.18
 	var direction: Vector3 = command.move
-	if windup > 0 or melee_clock.running: command.speed = 0
+	if windup > 0 or melee_clock.running or recovery > 0: command.speed = 0
 	if burst_left > 0 and stun == 0:
 		burst_delay -= delta
 		if burst_delay <= 0:
 			battle.enemy_shot(self,pending_aim)
 			model.fire()
 			burst_left -= 1
+			if burst_left == 0: recovery = 0.45
 			burst_delay = 0.18
 	# Collision feeler steers around cover; no teleporting or wall penetration.
 	var probe := PhysicsRayQueryParameters3D.create(aim_point(),aim_point()+direction*2,1,[get_rid(),player.get_rid()])
@@ -141,7 +144,7 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 	if stun > 0:
 		velocity.x = knockback.x
 		velocity.z = knockback.z
-	elif windup > 0 or melee_clock.running:
+	elif windup > 0 or melee_clock.running or recovery > 0:
 		velocity.x = 0
 		velocity.z = 0
 	else:
@@ -184,8 +187,9 @@ func step(player: CharacterBody3D, battle: Node3D, delta: float) -> void:
 			model.fire()
 			battle.enemy_shot(self,pending_aim)
 			burst_left = 0 if role == "SUPPORT" else (2 if role == "FLANKER" else 1)
+			if role == "SUPPORT": recovery = 0.65
 			burst_delay = 0.18
-	elif command.fire and cooldown == 0 and stun == 0:
+	elif command.fire and cooldown == 0 and stun == 0 and recovery == 0:
 		var sight := PhysicsRayQueryParameters3D.create(aim_point(),player.aim_point(),3,[get_rid()])
 		var hit := get_world_3d().direct_space_state.intersect_ray(sight)
 		if not hit.is_empty() and hit.collider == player:

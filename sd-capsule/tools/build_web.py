@@ -13,6 +13,9 @@ subprocess.run([args.godot,'--headless','--path',str(root),'--export-release','W
 html = (dist/'index.html').read_text()
 html = html.replace('"serviceWorker":"index.service.worker.js"','"serviceWorker":""')
 html = html.replace('src="index.png" alt=""','src="index.png" alt="니세 건담 — SDGO-like"')
+html = html.replace("'onProgress': function (current, total) {", """'onProgress': function (current, total) {
+ document.getElementById('status').setAttribute('data-loading-label', total <= 0 ? '게임 데이터 준비 중…' : current < total ? '게임 데이터 준비 ' + Math.floor(current/total*100) + '% · 첫 실행은 시간이 걸릴 수 있습니다' : '다운로드 완료 · 엔진과 3D 기체 준비 중');""")
+html = html.replace('<div id="status">','<div id="status" data-loading-label="게임 시작 준비 중…">')
 html = html.replace('</head>', '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#172537"></head>')
 html = html.replace('</body>',(root/'web/overlay.html').read_text()+'</body>')
 (dist/'index.html').write_text(html.rstrip()+'\n')

@@ -32,8 +32,8 @@ static func draw(h: Control) -> void:
 		var right := size.x-380-Layout.safe.z
 		h.text(Vector2(right,size.y-185),"RX-78-2",36,INK)
 		h.text(Vector2(right,size.y-154),"GENERAL PURPOSE / CLOSE COMBAT",12,ACCENT)
-		h.text(Vector2(right,size.y-120),"BEAM RIFLE   +   BEAM SABER",16,INK)
-		h.text(Vector2(right,size.y-88),"Single-player combat prototype",14,MUTED)
+		h.text(Vector2(right,size.y-120),"RIFLE / SABER / SP DISCHARGE",16,INK)
+		h.text(Vector2(right,size.y-88),"Land hits. Charge SP. Release the beam.",14,MUTED)
 	elif result:
 		h.text(Vector2(x,top+68),"MISSION CLEAR" if b.won else "UNIT DOWN",42,ACCENT if b.won else Color("ffa274"))
 		h.text(Vector2(x,top+104),"Three threats neutralized. Sortie complete." if b.won else "Change your angle. Break cover. Try again.",17,MUTED)
@@ -46,7 +46,7 @@ static func draw(h: Control) -> void:
 		h.text(Vector2(x,top+268),"SORTIE SCORE",14,ACCENT)
 		h.text(Vector2(x,top+319),"%05d" % g.rules.score(b,g.unit),48,INK)
 		h.text(Vector2(x+250,top+318),"BEST  %05d" % g.best_score,19,MUTED)
-		h.text(Vector2(x,top+362),"%d / 3 DESTROYED    /    %d SABER FINISHES" % [b.kills,b.melee_kills],16,MUTED)
+		h.text(Vector2(x,top+362),"%d / 3 DESTROYED / %d SABER / %d SP" % [b.kills,b.melee_kills,b.special.uses],16,MUTED)
 		var rx := size.x-430-Layout.safe.z
 		panel(h,Rect2(rx-24,top+50,370,330),0.8)
 		var grade := "S" if b.won and g.unit.hp >= 80 and b.elapsed < 30 else ("A" if b.won and g.unit.hp >= 50 else ("B" if b.won else "--"))
@@ -60,8 +60,8 @@ static func draw(h: Control) -> void:
 	else:
 		h.text(Vector2(x,top+76),"TAKE A BREATHER.",38,INK)
 		h.text(Vector2(x,top+116),"Your sortie resumes exactly where you left it.",18,MUTED)
-		var lines := ["WASD   Move     /     Hold mouse button + drag to look","LMB / F   Rifle     /     RMB / V   Saber combo","SPACE   Jump & boost     /     SHIFT   Dash","TAB   Find target     /     R   Reload","Q / E   Switch weapon     /     C   Free aim"]
-		if touch: lines = ["LEFT STICK   Move", "FIRE / BOOST   Shoot / Rise", "EMPTY SPACE DRAG   Turn camera", "MELEE   One tap, one swing", "DASH   Evade    /    TARGET   Find enemy"]
+		var lines := ["WASD   Move     /     Hold mouse button + drag to look","LMB / F   Rifle     /     RMB / V   Saber combo","SPACE   Jump & boost     /     SHIFT   Dash","TAB   Target / R   Reload / G   Special","Q / E   Switch weapon     /     C   Free aim"]
+		if touch: lines = ["LEFT STICK   Move", "FIRE / BOOST   Shoot / Rise", "EMPTY SPACE DRAG   Turn camera", "MELEE   One tap, one swing", "DASH   Evade / TARGET   Find / SP   Special"]
 		for i in range(lines.size()): h.text(Vector2(x,top+174+i*34),lines[i],17,INK)
 		h.text(Vector2(x,top+372),"DISPLAY  %d FPS   /   AVG %d" % [Engine.get_frames_per_second(),g.average_fps],14,MUTED)
 	var buttons := Layout.menu_buttons(size)

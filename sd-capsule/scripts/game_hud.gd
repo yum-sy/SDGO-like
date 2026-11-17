@@ -61,6 +61,8 @@ func _draw() -> void:
 		for round_index in range(6):
 			draw_rect(Rect2(Vector2(left+round_index*42,top+151),Vector2(34,5)),MINT if round_index < rifle.ammo else Color("344857"))
 		text(Vector2(left,top+179),"SABER  "+battle.attack.stage(),12,Color("8fa6b6"))
+	bar(Vector2(left,top+245),250,battle.special.gauge/100.0,Color("8adfff"))
+	text(Vector2(left,top+238),("SP READY / G" if battle.special.gauge >= 100 else "SP  %03d%%" % battle.special.gauge) if not battle.special.running else "SP / "+battle.special.stage(),16,Color("8adfff"))
 	var mission_x := size.x-290-Layout.safe.z
 	draw_rect(Rect2(Vector2(mission_x,top-10),Vector2(266,64)),Color(0.025,0.055,0.08,0.88))
 	text(Vector2(mission_x+14,top+12),"ELIMINATE HOSTILES",12,Color("8fa6b6"))
@@ -81,8 +83,8 @@ func _draw() -> void:
 		if not battle.auto_aim: text(center+Vector2(-45,30),"FREE AIM",16,MINT)
 		if battle.notice_left > 0:
 			var width := font.get_string_size(battle.notice,HORIZONTAL_ALIGNMENT_LEFT,-1,20).x
-			draw_rect(Rect2(Vector2(center.x-width/2-18,70),Vector2(width+36,40)),Color(0.02,0.07,0.11,0.8))
-			text(Vector2(center.x-width/2,97),battle.notice,20,MINT)
+			draw_rect(Rect2(Vector2(center.x-width/2-18,112),Vector2(width+36,40)),Color(0.02,0.07,0.11,0.8))
+			text(Vector2(center.x-width/2,139),battle.notice,20,MINT)
 		for cover in get_tree().get_nodes_in_group("breakable_cover"):
 			if cover.hp <= 0 or cover.hp == 75: continue
 			var at: Vector3 = cover.global_position+Vector3.UP*2.9
@@ -128,6 +130,8 @@ func _draw() -> void:
 					draw_line(edge,edge-Vector2(0,corner.y*12),MINT,2)
 				text(at+Vector2(-30,-44),"%s / %dm" % [target.role,player.position.distance_to(target.position)],16,MINT)
 			health_bar(at+Vector2(-25,42),50,target,Color(1,0.5,0.2) if target.windup>0 else MINT)
+			if target.recovery > 0 and target == battle.selected:
+				text(at+Vector2(-30,-63),"OPEN / ATTACK",16,MINT)
 			if target.windup > 0:
 				text(at+Vector2(-30,-63),"MELEE!" if target.attack_kind == "melee" else ("ROCKET / EVADE" if target.role == "SUPPORT" else "BURST / COVER"),16,Color(1,0.6,0.15))
 				draw_arc(at,46,-PI/2,-PI/2+TAU*(1-target.windup/(1.0 if target.role == "SUPPORT" else (0.55 if target.attack_kind == "melee" else 0.65))),24,Color(1,0.6,0.15),3)
@@ -142,7 +146,7 @@ func _draw() -> void:
 			for action in buttons:
 				var rect: Rect2 = buttons[action]
 				var active: bool = pilot.held(action)
-				var accent := Color("ef9dc7") if action == "melee" else (MINT if action == "fire" else Color("9ac9ed"))
+				var accent := Color("8adfff") if action == "special" and battle.special.gauge >= 100 else Color("ef9dc7") if action == "melee" else (MINT if action == "fire" else Color("9ac9ed"))
 				if action in ["fire","melee","boost","dash"]:
 					var radius: float = rect.size.x*0.5
 					draw_circle(rect.get_center(),radius,Color(0.1,0.4,0.5,0.8) if active else Color(0.04,0.1,0.17,0.65))
@@ -150,11 +154,12 @@ func _draw() -> void:
 				else:
 					draw_rect(rect,Color(0.1,0.4,0.5,0.8) if active else Color(0.04,0.1,0.17,0.5))
 					draw_rect(rect,Color(accent,0.4),false,1)
-				var label: String = {"cycle":"TARGET","weapon":"SWAP","aim":"AUTO ON" if battle.auto_aim else "FREE AIM"}.get(action,action.to_upper())
+				var label: String = {"special":"SP READY" if battle.special.gauge >= 100 else "SP %d%%" % battle.special.gauge,"cycle":"TARGET","weapon":"SWAP","aim":"AUTO ON" if battle.auto_aim else "FREE AIM"}.get(action,action.to_upper())
 				var label_width := font.get_string_size(label,HORIZONTAL_ALIGNMENT_LEFT,-1,20).x
 				text(rect.get_center()+Vector2(-label_width*0.5,6),label,20,accent)
 				var button_progress := -1.0
-				if action == "fire" and rifle.reload_left > 0: button_progress = 1-rifle.reload_left/rifle.RELOAD_TIME
+				if action == "special": button_progress = battle.special.gauge/100.0
+				elif action == "fire" and rifle.reload_left > 0: button_progress = 1-rifle.reload_left/rifle.RELOAD_TIME
 				elif action == "melee" and battle.attack.running: button_progress = battle.attack.elapsed/battle.attack.duration()
 				elif action == "boost": button_progress = player.booster/100.0
 				if button_progress >= 0:
