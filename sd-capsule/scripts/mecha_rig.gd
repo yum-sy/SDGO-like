@@ -4,6 +4,8 @@ var joints := {}
 var joint_rest := {}
 var elbows := {}
 var attack_weight := 0.0
+var special_active := false
+var heavy_rifle: Node3D
 var weapon: MeshInstance3D
 var hand_socket: Node3D
 var shield_mount: Node3D
@@ -137,6 +139,8 @@ func _ready() -> void:
 	grip.position.y = -0.91
 	saber.add_child(grip)
 	saber.hide()
+	heavy_rifle = preload("res://scripts/heavy_rifle.gd").new()
+	hand_socket.add_child(heavy_rifle)
 	for side in [-1,1]:
 		var flame := MeshInstance3D.new()
 		var cone := CylinderMesh.new()
@@ -197,8 +201,8 @@ func set_attack_pose(clock: RefCounted) -> void:
 		if attack_stage == "RECOVERY": attack_weight = 1-smoothstep(0,1,(clock.elapsed-clip.x-clip.y)/clip.z)
 	apply_blade_pose()
 func apply_blade_pose() -> void:
-	saber.visible = swing_left > 0 or saber_equipped
-	if is_instance_valid(weapon): weapon.visible = not saber.visible
+	saber.visible = not special_active and (swing_left > 0 or saber_equipped)
+	if is_instance_valid(weapon): weapon.visible = not saber.visible and not special_active
 	if saber.visible:
 		var direction := Vector3(sin(attack_angle),0,cos(attack_angle)) if swing_left > 0 else Vector3(-0.25,0.65,0.72).normalized()
 		var local_direction: Vector3 = hand_socket.get_parent().global_basis.inverse() * global_basis * direction
@@ -244,11 +248,12 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65,blend)
 			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
 			leg_pose -= landing*0.18
+			if special_active: leg_pose -= 0.16
 			leg_pose += attack_weight*side*(0.24 if swing_index == 3 else 0.12)
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
 			var firing_arm: bool = joint_sides[key] == gun_side
-			var arm_pose := -0.20-angle*0.22-sin(reload_progress*PI)*0.65-evade_weight*0.25
+			var arm_pose := (-0.4 if special_active else -0.20)-angle*0.22-sin(reload_progress*PI)*0.65-evade_weight*0.25
 			var yaw_pose := 0.0
 			var roll_pose := 0.0
 			joint.position = joint_rest[key]

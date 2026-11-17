@@ -318,6 +318,10 @@ func start_special() -> bool:
 	if not special.begin(): return false
 	cancel_melee()
 	player.special_locked = true
+	player.rig.special_active = true
+	player.rig.reload_progress = 0
+	player.rig.aim_left = 0.5
+	player.rig.apply_blade_pose()
 	player.focus_yaw = NAN
 	player.velocity = Vector3.ZERO
 	player.impulse = Vector3.ZERO
@@ -329,10 +333,13 @@ func start_special() -> bool:
 	if not is_instance_valid(special_visual):
 		special_visual = preload("res://scripts/special_beam.gd").new()
 		add_child(special_visual)
-	announce("BEAM DISCHARGE / DIRECTION LOCKED")
+	announce("WEAPON 03 / HEAVY BEAM RIFLE")
 	sound("saber")
 	return true
 func special_endpoint() -> Vector3:
+	var breech: Vector3 = player.aim_point()
+	var near_wall := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(breech,special_origin,1,[player.get_rid()]))
+	if not near_wall.is_empty(): return special_origin
 	var end := special_origin+special_direction*32
 	var wall := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(special_origin,end,1,[player.get_rid()]))
 	return wall.position if not wall.is_empty() else end
@@ -340,9 +347,12 @@ func advance_special(delta: float) -> void:
 	var previous := special.stage()
 	var pulses: int = special.advance(delta)
 	if previous == "WINDUP" and special.stage() != "WINDUP": sound("special")
+	player.rig.reload_progress = 0
 	player.rig.aim_left = 0.5
 	player.rig.saber_equipped = false
 	player.rig.recoil = 0.25 if special.stage() == "DISCHARGE" else 0
+	player.rig.heavy_rifle.sync(special_direction,special.stage(),special.elapsed)
+	special_origin = player.rig.heavy_rifle.muzzle.global_position
 	var end := special_endpoint()
 	special_visual.sync(special_origin,end,special.stage(),special.elapsed)
 	for pulse in range(pulses):
@@ -362,5 +372,9 @@ func advance_special(delta: float) -> void:
 func finish_special() -> void:
 	special.cancel()
 	player.special_locked = false
+	player.rig.special_active = false
+	player.rig.heavy_rifle.hide()
+	player.rig.saber_equipped = weapon == 1
+	player.rig.apply_blade_pose()
 	player.attack_slow = 1
 	if is_instance_valid(special_visual): special_visual.hide()

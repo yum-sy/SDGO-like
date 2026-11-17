@@ -50,11 +50,14 @@ func _draw() -> void:
 	text(Vector2(left+200,top+89),"%03d" % player.booster,16,MINT)
 	bar(Vector2(left,top+98),250,player.booster/100.0,MINT)
 	var rifle = battle.rifle
-	var name_text := "BEAM RIFLE" if battle.weapon == 0 else "BEAM SABER"
-	var ammo_text := "%d / 6" % rifle.ammo if battle.weapon == 0 else "%d / 3" % battle.combo
+	var name_text := "03 / HEAVY RIFLE" if battle.special.running else ("BEAM RIFLE" if battle.weapon == 0 else "BEAM SABER")
+	var ammo_text := "SP" if battle.special.running else ("%d / 6" % rifle.ammo if battle.weapon == 0 else "%d / 3" % battle.combo)
 	text(Vector2(left,top+136),name_text,18)
 	text(Vector2(left+192,top+136),ammo_text,20,MINT)
-	if rifle.reload_left > 0:
+	if battle.special.running:
+		bar(Vector2(left,top+151),250,minf(1,battle.special.elapsed/0.65),Color("8adfff"))
+		text(Vector2(left,top+179),battle.special.stage(),13,Color("8adfff"))
+	elif rifle.reload_left > 0:
 		bar(Vector2(left,top+151),250,1-rifle.reload_left/1.6,Color("f1ba74"))
 		text(Vector2(left,top+179),"RELOAD  %.1fs" % rifle.reload_left,13,Color("f1ba74"))
 	else:

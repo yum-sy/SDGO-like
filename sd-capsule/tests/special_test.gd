@@ -41,9 +41,12 @@ func run():
 	c.special_direction = Vector3.FORWARD
 	c.advance_special(0.6)
 	check(target.hp == 500,"windup never damages target")
+	check(game.unit.rig.heavy_rifle.visible and not game.unit.rig.weapon.visible and not game.unit.rig.saber.visible,"weapon 03 replaces normal weapons during charge")
+	check(c.special_origin.distance_to(game.unit.rig.heavy_rifle.muzzle.global_position)<0.001,"beam starts at heavy rifle muzzle")
 	for i in range(120): c.advance_special(1.0/60)
 	check(target.hp == 260,"full beam deals 240 damage")
 	check(not game.unit.special_locked and not c.special_visual.visible,"recovery restores movement and removes beam")
+	check(not game.unit.rig.heavy_rifle.visible and game.unit.rig.weapon.visible,"recovery restores normal rifle")
 	check(c.special.gauge == 0,"beam damage does not recharge SP")
 	c.special.gain(100)
 	game.block(Vector3(5,5,1),Vector3(0,2,-1),Color.GRAY)
