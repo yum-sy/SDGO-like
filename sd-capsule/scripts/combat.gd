@@ -319,6 +319,8 @@ func start_special() -> bool:
 	cancel_melee()
 	player.special_locked = true
 	player.rig.special_active = true
+	player.rig.special_raise = 0
+	player.rig.special_kick = 0
 	player.rig.reload_progress = 0
 	player.rig.aim_left = 0.5
 	player.rig.apply_blade_pose()
@@ -351,6 +353,12 @@ func advance_special(delta: float) -> void:
 	player.rig.aim_left = 0.5
 	player.rig.saber_equipped = false
 	player.rig.recoil = 0.25 if special.stage() == "DISCHARGE" else 0
+	var fire_age := maxf(0,special.elapsed-special.CHARGE_TIME)
+	player.rig.special_direction = special_direction
+	player.rig.special_raise = smoothstep(0,0.42,special.elapsed)
+	if special.stage() == "RECOVERY": player.rig.special_raise = 1-smoothstep(0,special.RECOVERY_TIME,fire_age-special.FIRE_TIME)
+	player.rig.special_kick = exp(-fire_age*12)*0.9+0.08*absf(sin(fire_age*32)) if special.stage() == "DISCHARGE" else 0.0
+	player.rig.apply_blade_pose()
 	player.rig.heavy_rifle.sync(special_direction,special.stage(),special.elapsed)
 	special_origin = player.rig.heavy_rifle.muzzle.global_position
 	var end := special_endpoint()

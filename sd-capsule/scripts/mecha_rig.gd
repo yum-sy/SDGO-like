@@ -5,6 +5,10 @@ var joint_rest := {}
 var elbows := {}
 var attack_weight := 0.0
 var special_active := false
+var special_weight := 0.0
+var special_raise := 0.0
+var special_kick := 0.0
+var special_direction := Vector3.FORWARD
 var heavy_rifle: Node3D
 var weapon: MeshInstance3D
 var hand_socket: Node3D
@@ -210,9 +214,13 @@ func apply_blade_pose() -> void:
 		hand_socket.basis = Basis(Quaternion(Vector3.UP,local_direction.normalized()))
 		saber.position = Vector3.UP*0.91
 		saber.basis = Basis.IDENTITY
+	elif special_active:
+		hand_socket.global_basis = Basis.looking_at(special_direction,Vector3.UP if absf(special_direction.y)<0.95 else Vector3.RIGHT,true)
 	else:
 		hand_socket.basis = Basis.IDENTITY
 func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> void:
+	special_weight = lerpf(special_weight,special_raise if special_active else 0.0,1-exp(-14*delta))
+	if not special_active: special_kick = move_toward(special_kick,0,delta*8)
 	aim_left = maxf(0,aim_left-delta)
 	recoil = move_toward(recoil,0,delta*9)
 	hurt = move_toward(hurt,0,delta*5)
@@ -221,13 +229,13 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 	previous_velocity = velocity
 	inertia = inertia.lerp((global_basis.inverse()*acceleration).limit_length(35),1-exp(-9*delta))
 	var forward_speed := (global_basis.inverse()*velocity).z
-	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else clampf(forward_speed/70,-0.1,0.1))+hurt*0.16+clampf(inertia.z*0.002,-0.07,0.07),1-exp(-12*delta))
+	rotation.x = lerpf(rotation.x,(-0.22 if boost_active else clampf(forward_speed/70,-0.1,0.1))+hurt*0.16+clampf(inertia.z*0.002,-0.07,0.07)-special_weight*0.08+special_kick*0.10,1-exp(-12*delta))
 	var blend := 1-exp(-16*delta)
 	evade_weight = lerpf(evade_weight,1.0 if boost_active else 0.0,blend)
 	var local_motion := global_basis.inverse()*velocity
 	var slash_bank := sin(attack_angle)*0.12 if swing_left > 0 else 0.0
 	rotation.z = lerpf(rotation.z,clampf(-local_motion.x/24,-0.28,0.28)*maxf(0.25,evade_weight)+hurt*0.08+slash_bank-clampf(inertia.x*0.002,-0.07,0.07),blend)
-	position.y = -landing*0.12 - attack_weight*(0.08 if swing_index == 3 else 0.035) + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
+	position.y = -special_weight*0.10-special_kick*0.025-landing*0.12 - attack_weight*(0.08 if swing_index == 3 else 0.035) + (absf(sin(time))*0.025 if grounded and velocity.length() > 0.5 and not boost_active else 0.0)
 	for flame in thrusters:
 		flame.visible = boost_active
 		flame.scale.y = 0.8+sin(time*7)*0.2
@@ -245,10 +253,10 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			var forward_weight := clampf(local_motion.z/7,-1,1)
 			var strafe_weight := clampf(local_motion.x/7,-1,1)
 			var leg_pose := angle*forward_weight if grounded else -0.25
-			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65,blend)
+			joint.rotation.z = lerpf(joint.rotation.z,angle*strafe_weight*0.65+side*special_weight*0.10,blend)
 			leg_pose = lerpf(leg_pose,-0.35+side*0.3,evade_weight)
 			leg_pose -= landing*0.18
-			if special_active: leg_pose -= 0.16
+			leg_pose += special_weight*(-0.20+side*0.13)
 			leg_pose += attack_weight*side*(0.24 if swing_index == 3 else 0.12)
 			joint.rotation.x = lerpf(joint.rotation.x,leg_pose,blend)
 		else:
@@ -275,6 +283,16 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 				joint.position += Vector3(0,recoil*0.025,-recoil*0.09)
 			elif aim_left > 0 and reload_progress == 0:
 				arm_pose -= minf(1,aim_left*8)*0.25
+			if special_active:
+				# Open the firing elbow outward so the receiver clears the SD head.
+				var outward := signf(joint_rest[key].x)
+				if firing_arm:
+					arm_pose = lerpf(-0.25,-1.05-aim_pitch,special_weight)+special_kick*0.12
+					roll_pose = outward*0.48*special_weight
+					joint.position += Vector3(0,0,-special_kick*0.10)
+				else:
+					arm_pose = -0.45-special_weight*0.35
+					yaw_pose = -outward*0.15*special_weight
 			joint.rotation.x = lerpf(joint.rotation.x,arm_pose,blend)
 			joint.rotation.y = lerp_angle(joint.rotation.y,yaw_pose,blend)
 			joint.rotation.z = lerp_angle(joint.rotation.z,roll_pose,blend)
@@ -284,6 +302,7 @@ func animate(velocity: Vector3, grounded: bool, time: float, delta: float) -> vo
 			bend -= 0.30*minf(1,aim_left*8) + 0.34*sin(reload_progress*PI)
 			bend -= 0.20*attack_weight
 		else: bend -= 0.18*attack_weight
+		if special_active: bend = -0.18-special_weight*(0.15 if side_name == gun_side else 0.35)
 		elbows[side_name].rotation.x = lerpf(elbows[side_name].rotation.x,bend,blend)
 	apply_blade_pose()
 
